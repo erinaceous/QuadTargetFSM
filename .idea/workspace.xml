@@ -13,14 +13,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="05044d05-aa89-44b1-87ea-e7d86e8e1371" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Marker.cpp" afterPath="$PROJECT_DIR$/src/Marker.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/StateMachine.cpp" afterPath="$PROJECT_DIR$/src/StateMachine.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Target.cpp" afterPath="$PROJECT_DIR$/src/Target.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/TargetFinder.cpp" afterPath="$PROJECT_DIR$/src/TargetFinder.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/TargetFinder.h" afterPath="$PROJECT_DIR$/src/TargetFinder.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/quadtargetfsm_webcam.mp4" afterPath="$PROJECT_DIR$/quadtargetfsm_webcam.mp4" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config.ini" afterPath="$PROJECT_DIR$/config.ini" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main.cpp" afterPath="$PROJECT_DIR$/src/main.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
     </list>
     <ignored path="QuadTargetFSM.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -85,10 +79,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="TargetFinder.cpp" pinned="false" current-in-tab="false">
+      <file leaf-file-name="TargetFinder.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/TargetFinder.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="3.203125">
+            <state vertical-scroll-proportion="-0.36607143">
               <caret line="131" column="34" selection-start-line="131" selection-start-column="34" selection-end-line="131" selection-end-column="34" />
               <folding />
             </state>
@@ -131,10 +125,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="StateMachine.cpp" pinned="false" current-in-tab="true">
+      <file leaf-file-name="StateMachine.cpp" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/StateMachine.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-2.1607144">
+            <state vertical-scroll-proportion="18.90625">
               <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
               <folding />
             </state>
@@ -289,7 +283,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1" y="-4" width="1368" height="773" extended-state="6" />
+    <frame x="-1" y="-4" width="1368" height="773" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24981412" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -472,22 +466,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config.ini">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="23" column="14" selection-start-line="23" selection-start-column="14" selection-end-line="23" selection-end-column="14" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/TargetFinder.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="3.203125">
-          <caret line="131" column="34" selection-start-line="131" selection-start-column="34" selection-end-line="131" selection-end-column="34" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/TargetFinder.h">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-5.703125">
@@ -520,8 +498,24 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/StateMachine.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-2.1607144">
+        <state vertical-scroll-proportion="18.90625">
           <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config.ini">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="23" column="14" selection-start-line="23" selection-start-column="14" selection-end-line="23" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/TargetFinder.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-0.36607143">
+          <caret line="131" column="34" selection-start-line="131" selection-start-column="34" selection-end-line="131" selection-end-column="34" />
           <folding />
         </state>
       </provider>
