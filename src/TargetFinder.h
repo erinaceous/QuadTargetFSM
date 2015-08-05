@@ -25,10 +25,10 @@ namespace targetfinder {
             int ylength();
             bool contains(Marker other);
             bool contains(cv::Point other);
-            bool contains(double x, double y);
-            double distance(Marker other);
-            static double distance(Marker one, Marker two);
-            static double angle(Marker one, Marker two);
+            bool contains(float x, float y);
+            float distance(Marker other);
+            static float distance(Marker one, Marker two);
+            static float angle(Marker one, Marker two);
             cv::Rect rect();
             std::shared_ptr<Marker> cloned_shared_ptr();
         protected:
@@ -42,16 +42,16 @@ namespace targetfinder {
         friend class Marker;
         friend class TargetFinder;
         public:
-            static constexpr double MIN_MARKER_DISTANCE = 0.5;
-            static constexpr double MAX_MARKER_DISTANCE = 5.0;
-            static constexpr double MARKER_SIZE_TOLERANCE = 0.7;
+            static constexpr float MIN_MARKER_DISTANCE = 0.5;
+            static constexpr float MAX_MARKER_DISTANCE = 5.0;
+            static constexpr float MARKER_SIZE_TOLERANCE = 0.7;
 
             // Target();
             // ~Target();
             bool valid();
             bool addMarker(std::shared_ptr<Marker> m);
-            double angle();
-            double length();
+            float angle();
+            float length();
             cv::Rect rect();
             cv::RotatedRect rotatedRect();
             cv::Point center();
@@ -62,14 +62,14 @@ namespace targetfinder {
         protected:
             std::shared_ptr<Marker> markers[3];
             int marker_count = 0;
-            double calc_angle, calc_length;
+            float calc_angle, calc_length;
             cv::Rect bounding_box;
             cv::Point center_point;
             bool updated = true;
             void calcGeometry();
             std::shared_ptr<Marker> corner;
-            double cornerAngle;
-            double min_marker_distance, max_marker_distance, marker_size_tolerance;
+            float cornerAngle;
+            float min_marker_distance, max_marker_distance, marker_size_tolerance;
     };
 
     class PersistentTarget {
@@ -77,9 +77,9 @@ namespace targetfinder {
         friend class TargetFinder;
         public:
             static constexpr int LIFETIME = 5;
-            void update(cv::RotatedRect new_rotated_rect, double influence=0.5);
-            static double similarity(cv::RotatedRect one, cv::RotatedRect two);
-            double similarity(cv::RotatedRect other);
+            void update(cv::RotatedRect new_rotated_rect, float influence=0.5);
+            static float similarity(cv::RotatedRect one, cv::RotatedRect two);
+            float similarity(cv::RotatedRect other);
             cv::RotatedRect getRotatedRect();
             std::string str();
         protected:
@@ -91,24 +91,24 @@ namespace targetfinder {
         friend class Marker;
         public:
             static constexpr int MIN_LENGTH = 1;
-            static constexpr double TOLERANCE = 0.5;
+            static constexpr float TOLERANCE = 0.5;
             static constexpr int NUM_STATES = 7;
 
-            StateMachine(int input_length=0, double tolerance=TOLERANCE, int min_pixels=MIN_LENGTH, double aspect=1.0);
+            StateMachine(int input_length=0, float tolerance=TOLERANCE, int min_pixels=MIN_LENGTH, float aspect=1.0);
             Marker* step(int x, int y, bool value);
             void reset(int y, bool value=false);
             cv::Vec3b state_colour();
             void setInputLength(int input_length);
             int state;
         protected:
-            bool in_bounds(int count, double scale=1.0);
+            bool in_bounds(int count, float scale=1.0);
             bool valid_transition(int x, bool value);
             void transition(int x, int y, bool value);
 
             bool last_value;
             int first_x, last_x, y, input_length, min_pixels, max_pixels;
             int pixel_counts[NUM_STATES];
-            double tolerance, aspect, min_bound, max_bound;
+            float tolerance, aspect, min_bound, max_bound;
     };
 
     class TargetFinder {
@@ -116,29 +116,29 @@ namespace targetfinder {
         friend class Target;
         public:
             static constexpr int THRESH_BINS = 1;
-            static constexpr double MARKER_ASPECT_TOLERANCE = 0.9;
+            static constexpr float MARKER_ASPECT_TOLERANCE = 0.9;
 
             std::vector<Target> doTargetRecognition(cv::Mat input, cv::Mat output, bool show_state=false);
             std::vector<PersistentTarget> getPersistentTargets();
             void setMinLength(int min_length);
-            void setTolerance(double tolerance);
+            void setTolerance(float tolerance);
             void setNumBins(int num_bins);
-            void setMarkerAspectTolerance(double tolerance);
-            void setMarkerDistances(double min_distance, double max_distance);
-            void setMarkerSizeTolerance(double tolerance);
+            void setMarkerAspectTolerance(float tolerance);
+            void setMarkerDistances(float min_distance, float max_distance);
+            void setMarkerSizeTolerance(float tolerance);
 
         protected:
             std::vector<PersistentTarget> finalTargets;
             int min_length = StateMachine::MIN_LENGTH;
             int num_bins = THRESH_BINS;
-            double tolerance = StateMachine::TOLERANCE;
-            double marker_aspect_tolerance = MARKER_ASPECT_TOLERANCE;
-            double min_marker_distance = Target::MIN_MARKER_DISTANCE;
-            double max_marker_distance = Target::MAX_MARKER_DISTANCE;
-            double marker_size_tolerance = Target::MARKER_SIZE_TOLERANCE;
+            float tolerance = StateMachine::TOLERANCE;
+            float marker_aspect_tolerance = MARKER_ASPECT_TOLERANCE;
+            float min_marker_distance = Target::MIN_MARKER_DISTANCE;
+            float max_marker_distance = Target::MAX_MARKER_DISTANCE;
+            float marker_size_tolerance = Target::MARKER_SIZE_TOLERANCE;
 
         private:
-            static double aspect(int width, int height);
+            static float aspect(int width, int height);
     };
 
 }

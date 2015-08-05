@@ -72,21 +72,21 @@ cv::Point Target::center() {
 }
 
 void Target::calcGeometry() {
-    double a01 = Marker::angle(*this->markers[0], *this->markers[1]);
-    double a02 = Marker::angle(*this->markers[0], *this->markers[2]);
-    double a10 = Marker::angle(*this->markers[1], *this->markers[0]);
-    double a12 = Marker::angle(*this->markers[1], *this->markers[2]);
-    double a20 = Marker::angle(*this->markers[2], *this->markers[0]);
-    double a21 = Marker::angle(*this->markers[2], *this->markers[1]);
-    double a0 = abs(a01 - a02);
-    double a1 = abs(a10 - a12);
-    double a2 = abs(a20 - a21);
+    float a01 = Marker::angle(*this->markers[0], *this->markers[1]);
+    float a02 = Marker::angle(*this->markers[0], *this->markers[2]);
+    float a10 = Marker::angle(*this->markers[1], *this->markers[0]);
+    float a12 = Marker::angle(*this->markers[1], *this->markers[2]);
+    float a20 = Marker::angle(*this->markers[2], *this->markers[0]);
+    float a21 = Marker::angle(*this->markers[2], *this->markers[1]);
+    float a0 = abs(a01 - a02);
+    float a1 = abs(a10 - a12);
+    float a2 = abs(a20 - a21);
 
     /* if(a0 > M_PI_2) a0 = M_PI - a0;
     if(a1 > M_PI_2) a1 = M_PI - a1;
     if(a2 > M_PI_2) a2 = M_PI - a2; */
 
-    double centerx, centery;
+    float centerx, centery;
     cv::Point center_one, center_two;
 
     if(a0 >= a1 && a0 >= a2) {
@@ -115,8 +115,8 @@ void Target::calcGeometry() {
             (center_one.y + center_two.y) / 2
     );
     cv::Point corner_center = this->corner->center();
-    double dx = corner_center.x - new_center.x;
-    double dy = corner_center.y - new_center.y;
+    float dx = corner_center.x - new_center.x;
+    float dy = corner_center.y - new_center.y;
     this->calc_angle = atan2(dy, dx);
     this->calc_length = sqrt((dx * dx) + (dy * dy));
 }
@@ -125,19 +125,19 @@ bool Target::isClose(std::shared_ptr<Marker> m) {
     if(this->marker_count > 2) {
         return false;
     }
-    double avg_size, avg_width;
+    float avg_size, avg_width;
     for(int i=0; i<this->marker_count; i++) {
         avg_size += this->markers[i]->rect().area();
         avg_width += this->markers[i]->xlength();
     }
-    avg_size /= (double) this->marker_count;
-    avg_width /= (double) this->marker_count;
-    double min_size = avg_size * this->marker_size_tolerance;
-    double max_size = avg_size / this->marker_size_tolerance;
-    double marker_area = m->rect().area();
+    avg_size /= (float) this->marker_count;
+    avg_width /= (float) this->marker_count;
+    float min_size = avg_size * this->marker_size_tolerance;
+    float max_size = avg_size / this->marker_size_tolerance;
+    float marker_area = m->rect().area();
     if(marker_area >= min_size && marker_area <= max_size) {
         for(int i=0; i<this->marker_count; i++) {
-            double dist_apart = Marker::distance(*this->markers[i], *m);
+            float dist_apart = Marker::distance(*this->markers[i], *m);
             if(dist_apart >= (avg_width * this->min_marker_distance)
                && dist_apart <= (avg_width * this->max_marker_distance)) {
                 return true;

@@ -77,21 +77,21 @@ int main() {
     cv::Mat output;
     targetfinder::TargetFinder tf;
     tf.setMinLength(pt.get<int>("parameters.min_length"));
-    tf.setTolerance(pt.get<double>("parameters.tolerance"));
+    tf.setTolerance(pt.get<float>("parameters.tolerance"));
     tf.setNumBins(pt.get<int>("parameters.num_bins"));
-    tf.setMarkerAspectTolerance(pt.get<double>("parameters.marker_aspect_tolerance"));
+    tf.setMarkerAspectTolerance(pt.get<float>("parameters.marker_aspect_tolerance"));
     tf.setMarkerDistances(
-            pt.get<double>("parameters.min_marker_distance"),
-            pt.get<double>("parameters.max_marker_distance")
+            pt.get<float>("parameters.min_marker_distance"),
+            pt.get<float>("parameters.max_marker_distance")
     );
-    tf.setMarkerSizeTolerance(pt.get<double>("parameters.marker_size_tolerance"));
+    tf.setMarkerSizeTolerance(pt.get<float>("parameters.marker_size_tolerance"));
     bool show_state = pt.get<bool>("gui.show_state");
 
     bool running = true;
     int64 start = cv::getTickCount();
     int64 current;
-    double fps = 1.0;
-    static constexpr double alphafps = 0.05;
+    float fps = 1.0;
+    static constexpr float alphafps = 0.05;
     while(running) {
         current = cv::getTickCount();
         if (!test_image) {
@@ -138,7 +138,7 @@ int main() {
         }
 
         int64 ticks = cv::getTickCount() - current;
-        double rate = 1 / (ticks / cv::getTickFrequency());
+        float rate = 1 / (ticks / cv::getTickFrequency());
         fps = (alphafps * rate) + (1.0 - alphafps) * fps;
 
         if(!headless || save_video) {
