@@ -151,13 +151,13 @@ int main() {
             cv::putText(output, format(tickStr, fps), cv::Point(10, 20),
                         cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 255));
         }
-        if(!headless) {
-            cv::imshow("output", output);
-        }
         if(save_video) {
             wri.write(output);
         }
-        cv::waitKey(wait_key);
+        if(!headless) {
+            cv::imshow("output", output);
+            cv::waitKey(wait_key);
+        }
     }
 
     return 0;
