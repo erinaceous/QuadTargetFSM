@@ -57,7 +57,7 @@ int main() {
     cap.set(CV_CAP_PROP_FRAME_WIDTH, pt.get<int>("camera.width"));
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, pt.get<int>("camera.height"));
     cap.set(CV_CAP_PROP_FPS, pt.get<int>("camera.fps"));
-    // cap.set(CV_CAP_PROP_CONVERT_RGB, false);
+    cap.set(CV_CAP_PROP_CONVERT_RGB, pt.get<bool>("camera.convert_rgb"));
 
     cv::Mat input;
     if(test_image) {
@@ -73,7 +73,7 @@ int main() {
                  cv::Size(input.cols, input.rows));
     }
 
-    cv::Mat processed;
+    // cv::Mat processed;
     cv::Mat output;
     targetfinder::TargetFinder tf;
     tf.setMinLength(pt.get<int>("parameters.min_length"));
@@ -86,7 +86,7 @@ int main() {
     );
     tf.setMarkerSizeTolerance(pt.get<float>("parameters.marker_size_tolerance"));
     bool show_state = pt.get<bool>("gui.show_state");
-
+    bool convert_yuv = pt.get<bool>("camera.convert_yuv");
     bool running = true;
     int64 start = cv::getTickCount();
     int64 current;
@@ -106,8 +106,10 @@ int main() {
             input.copyTo(output);
         }
 
-        cv::cvtColor(input, processed, cv::COLOR_BGR2YUV);
-        std::vector<targetfinder::Target> targets = tf.doTargetRecognition(processed, output, show_state);
+        if(convert_yuv) {
+            cv::cvtColor(input, input, cv::COLOR_BGR2YUV);
+        }
+        std::vector<targetfinder::Target> targets = tf.doTargetRecognition(input, output, show_state);
 
         for(int i=0; i<targets.size(); i++) {
             if(targets[i].calc_valid) {

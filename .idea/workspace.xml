@@ -13,8 +13,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="05044d05-aa89-44b1-87ea-e7d86e8e1371" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/quadtargetfsm_webcam.mp4" afterPath="$PROJECT_DIR$/quadtargetfsm_webcam.mp4" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config.ini" afterPath="$PROJECT_DIR$/config.ini" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main.cpp" afterPath="$PROJECT_DIR$/src/main.cpp" />
     </list>
     <ignored path="QuadTargetFSM.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -49,7 +49,7 @@
         <entry file="file://$PROJECT_DIR$/src/main.cpp">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="140" column="14" selection-start-line="140" selection-start-column="14" selection-end-line="140" selection-end-column="14" />
+              <caret line="59" column="72" selection-start-line="59" selection-start-column="72" selection-end-line="59" selection-end-column="72" />
               <folding>
                 <element signature="e#420#439#0" expanded="true" />
               </folding>
@@ -69,20 +69,20 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="config.ini" pinned="false" current-in-tab="false">
+      <file leaf-file-name="config.ini" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/config.ini">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="23" column="14" selection-start-line="23" selection-start-column="14" selection-end-line="23" selection-end-column="14" />
+            <state vertical-scroll-proportion="0.60096157">
+              <caret line="25" column="20" selection-start-line="25" selection-start-column="20" selection-end-line="25" selection-end-column="20" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="TargetFinder.cpp" pinned="false" current-in-tab="true">
+      <file leaf-file-name="TargetFinder.cpp" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/TargetFinder.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.36607143">
+            <state vertical-scroll-proportion="3.203125">
               <caret line="131" column="34" selection-start-line="131" selection-start-column="34" selection-end-line="131" selection-end-column="34" />
               <folding />
             </state>
@@ -146,13 +146,13 @@
         <option value="$PROJECT_DIR$/main.cpp" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/src/PersistentTarget.cpp" />
-        <option value="$PROJECT_DIR$/config.ini" />
-        <option value="$PROJECT_DIR$/src/main.cpp" />
         <option value="$PROJECT_DIR$/src/TargetFinder.cpp" />
         <option value="$PROJECT_DIR$/src/TargetFinder.h" />
         <option value="$PROJECT_DIR$/src/Target.cpp" />
         <option value="$PROJECT_DIR$/src/Marker.cpp" />
         <option value="$PROJECT_DIR$/src/StateMachine.cpp" />
+        <option value="$PROJECT_DIR$/config.ini" />
+        <option value="$PROJECT_DIR$/src/main.cpp" />
       </list>
     </option>
   </component>
@@ -283,7 +283,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1" y="-4" width="1368" height="773" extended-state="7" />
+    <frame x="-1" y="-4" width="1368" height="773" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24981412" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -446,16 +446,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="140" column="14" selection-start-line="140" selection-start-column="14" selection-end-line="140" selection-end-column="14" />
-          <folding>
-            <element signature="e#420#439#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/PersistentTarget.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -504,18 +494,28 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config.ini">
+    <entry file="file://$PROJECT_DIR$/src/TargetFinder.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="23" column="14" selection-start-line="23" selection-start-column="14" selection-end-line="23" selection-end-column="14" />
+        <state vertical-scroll-proportion="3.203125">
+          <caret line="131" column="34" selection-start-line="131" selection-start-column="34" selection-end-line="131" selection-end-column="34" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/TargetFinder.cpp">
+    <entry file="file://$PROJECT_DIR$/src/main.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.36607143">
-          <caret line="131" column="34" selection-start-line="131" selection-start-column="34" selection-end-line="131" selection-end-column="34" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="59" column="72" selection-start-line="59" selection-start-column="72" selection-end-line="59" selection-end-column="72" />
+          <folding>
+            <element signature="e#420#439#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config.ini">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.60096157">
+          <caret line="25" column="20" selection-start-line="25" selection-start-column="20" selection-end-line="25" selection-end-column="20" />
           <folding />
         </state>
       </provider>
