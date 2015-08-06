@@ -13,11 +13,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="05044d05-aa89-44b1-87ea-e7d86e8e1371" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/StateMachine.cpp" afterPath="$PROJECT_DIR$/src/StateMachine.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/TargetFinder.cpp" afterPath="$PROJECT_DIR$/src/TargetFinder.cpp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/TargetFinder.h" afterPath="$PROJECT_DIR$/src/TargetFinder.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config.ini" afterPath="$PROJECT_DIR$/config.ini" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main.cpp" afterPath="$PROJECT_DIR$/src/main.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="QuadTargetFSM.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -51,8 +48,8 @@
       <file leaf-file-name="main.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-1.0432693">
-              <caret line="85" column="32" selection-start-line="85" selection-start-column="32" selection-end-line="85" selection-end-column="32" />
+            <state vertical-scroll-proportion="0.61538464">
+              <caret line="73" column="110" selection-start-line="73" selection-start-column="110" selection-end-line="73" selection-end-column="110" />
               <folding>
                 <element signature="e#420#439#0" expanded="true" />
               </folding>
@@ -515,8 +512,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-1.0432693">
-          <caret line="85" column="32" selection-start-line="85" selection-start-column="32" selection-end-line="85" selection-end-column="32" />
+        <state vertical-scroll-proportion="0.61538464">
+          <caret line="73" column="110" selection-start-line="73" selection-start-column="110" selection-end-line="73" selection-end-column="110" />
           <folding>
             <element signature="e#420#439#0" expanded="true" />
           </folding>

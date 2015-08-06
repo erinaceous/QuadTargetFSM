@@ -39,6 +39,7 @@ int main() {
     int wait_key = pt.get<int>("gui.waitKey");
     string video_file = pt.get<string>("camera.file");
     string save_video_file = pt.get<string>("gui.save_video");
+    int desired_fps = pt.get<int>("camera.fps");
 
 
     VideoCapture cap;
@@ -56,7 +57,7 @@ int main() {
     }
     cap.set(CV_CAP_PROP_FRAME_WIDTH, pt.get<int>("camera.width"));
     cap.set(CV_CAP_PROP_FRAME_HEIGHT, pt.get<int>("camera.height"));
-    cap.set(CV_CAP_PROP_FPS, pt.get<int>("camera.fps"));
+    cap.set(CV_CAP_PROP_FPS, desired_fps);
     cap.set(CV_CAP_PROP_CONVERT_RGB, pt.get<bool>("camera.convert_rgb"));
 
     cv::Mat input;
@@ -69,7 +70,8 @@ int main() {
     VideoWriter wri;
     if(save_video_file.compare("none") != 0) {
         save_video = true;
-        wri.open(save_video_file, CV_FOURCC('M', 'J', 'P', 'G'), 30,
+        wri.open(save_video_file, CV_FOURCC('M', 'J', 'P', 'G'),
+                 (desired_fps <= 0) ? 30 : desired_fps,  // set output FPS to 30 if input is "fast as possible"
                  cv::Size(input.cols, input.rows));
     }
 
