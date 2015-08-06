@@ -127,29 +127,39 @@ int main() {
                 input.rows, input.cols
         );
 
-        std::cout << "{'targets': [";
+        std::cout << "{\"targets\": [";
         for(int i=0; i<targets.size(); i++) {
             if(targets[i].calc_valid) {
-                cv::RotatedRect r = targets[i].rotatedRect();
-                float real_distance = cm.distance(r.size.width, r.size.height) * 0.001;
+                cv::Rect r = targets[i].rect();
+                cv::RotatedRect rr = targets[i].rotatedRect();
+                float real_distance = cm.distance(rr.size.width, rr.size.height) * 0.001;
+                float angle = targets[i].angle();
                 std::cout << "{" << targets[i].str();
-                std::cout << ", 'distance(m)': " << real_distance << "}" << std::endl;
+                std::cout << ", \"distance(m)\": " << real_distance << "}";
                 if(!headless || save_video) {
-                    // cv::ellipse(output, r, cv::Scalar(0, 0, 0), 3);
-                    // cv::ellipse(output, r, cv::Scalar(0, 0, 255), 1);
+                    cv::Scalar c_black = cv::Scalar(0, 0, 0);
+                    cv::Scalar c_red = cv::Scalar(0, 0, 255);
 
-                    cv::circle(output, r.center, 5, cv::Scalar(0, 0, 0), -1);
-                    cv::circle(output, r.center, 3, cv::Scalar(0, 0, 255), -1);
+                    /* cv::Point2f r_points[4]; r.points(r_points);
+                    for(int j=0; j<4; j++) {
+                        cv::line(output, r_points[j], r_points[(j+1)%4], c_black, 3);
+                        cv::line(output, r_points[j], r_points[(j+1)%4], c_red, 1);
+                    } */
+                    cv::rectangle(output, r, c_black, 3);
+                    cv::rectangle(output, r, c_red, 1);
+
+                    cv::circle(output, rr.center, 5, c_black, -1);
+                    cv::circle(output, rr.center, 3, c_red, -1);
                     cv::Point endPoint = cv::Point(
-                            r.center.x + r.size.width * cos(r.angle),
-                            r.center.y + r.size.height * sin(r.angle)
+                            rr.center.x + r.width * cos(angle),
+                            rr.center.y + r.height * sin(angle)
                     );
-                    cv::line(output, r.center, endPoint, cv::Scalar(0, 0, 0), 3);
-                    cv::line(output, r.center, endPoint, cv::Scalar(0, 0, 255), 1);
+                    cv::line(output, rr.center, endPoint, c_black, 3);
+                    cv::line(output, rr.center, endPoint, c_red, 1);
                 }
             }
         }
-        std::cout << "], 'fps': "<< fps << ", 'time': " << current << "}" << std::endl;
+        std::cout << "], \"fps\": "<< fps << ", \"time\": " << current << "}" << std::endl;
 
         std::vector<targetfinder::PersistentTarget> persistentTargets = tf.getPersistentTargets();
         for(int i=0; i<persistentTargets.size(); i++) {

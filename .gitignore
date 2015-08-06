@@ -32,3 +32,7 @@
 
 # Anything in build/
 build/
+
+# Python stuff
+*.pyo
+*.pyc

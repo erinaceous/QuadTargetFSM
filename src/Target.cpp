@@ -32,22 +32,23 @@ bool Target::valid() {
 }
 
 cv::Rect Target::rect() {
-    cv::Point center = this->markers[0]->center();
-    int top = center.y, left = center.x;
-    int bottom = center.y, right = center.x;
+    cv::Rect rect = this->markers[0]->rect();
+    int top = rect.y, left = rect.x;
+    int bottom = rect.y + rect.height, right = rect.x + rect.width;
     for(int i=1; i<this->marker_count; i++) {
-        cv::Point marker_center = this->markers[i]->center();
-        if(marker_center.x < left) {
-            left = marker_center.x;
+        cv::Rect new_rect = this->markers[i]->rect();
+        cv::Point new_rect_br = new_rect.br();
+        if(new_rect.x < left) {
+            left = new_rect.x;
         }
-        if(marker_center.x > right) {
-            right = marker_center.x;
+        if((new_rect_br.x) > right) {
+            right = new_rect_br.x;
         }
-        if(marker_center.y < top) {
-            top = marker_center.y;
+        if(new_rect.y < top) {
+            top = new_rect.y;
         }
-        if(marker_center.y > bottom) {
-            bottom = marker_center.y;
+        if(new_rect_br.y > bottom) {
+            bottom = new_rect_br.y;
         }
 
     }
@@ -59,7 +60,7 @@ cv::Rect Target::rect() {
 cv::RotatedRect Target::rotatedRect() {
     cv::Rect rect = this->rect();
     return cv::RotatedRect(
-            this->center(), cv::Size2f(rect.width, rect.height), this->calc_angle
+            this->center(), cv::Size2f(rect.width, rect.height), (this->calc_angle * 180 / M_PI)
     );
 }
 
@@ -69,6 +70,10 @@ cv::Point Target::center() {
             rect.x + (rect.width / 2),
             rect.y + (rect.height / 2)
     );
+}
+
+float Target::angle() {
+    return this->calc_angle;
 }
 
 void Target::calcGeometry() {
@@ -149,10 +154,9 @@ bool Target::isClose(std::shared_ptr<Marker> m) {
 std::string Target::str() {
     std::stringstream ss;
     cv::Rect rect = this->rect();
-    ss << "'target': {'rect': {'x':" << rect.x << ", 'y':" << rect.y;
-    ss << ", 'w':" << rect.width << ", 'h':" << rect.height << "}, ";
-    ss << "'angle': " << this->calc_angle << ", 'length': " << this->calc_length;
-    // ss << ", markers: " << this->marker_count << "})";
+    ss << "\"target\": {\"rect\": {\"x\":" << rect.x << ", \"y\":" << rect.y;
+    ss << ", \"w\":" << rect.width << ", \"h\":" << rect.height << "}, ";
+    ss << "\"angle\": " << this->calc_angle << ", \"length\": " << this->calc_length;
     ss << "}";
     return ss.str();
 }
