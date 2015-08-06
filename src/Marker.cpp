@@ -67,9 +67,6 @@ float Marker::angle(Marker one, Marker two) {
     cv::Point b = two.center();
     float dx = b.x - a.x;
     float dy = b.y - a.y;
-    if(dx == 0) {
-        return 0;
-    }
     return atan2(dy, dx);
 }
 

@@ -90,6 +90,8 @@ int main() {
     tf.setMarkerSizeTolerance(pt.get<float>("parameters.marker_size_tolerance"));
     bool show_state = pt.get<bool>("gui.show_state");
     bool convert_yuv = pt.get<bool>("camera.convert_yuv");
+    bool flip_vertical = pt.get<bool>("camera.flip_vertical");
+    bool flip_horizontal = pt.get<bool>("camera.flip_horizontal");
     bool running = true;
     int64 start = cv::getTickCount();
     int64 current;
@@ -105,6 +107,14 @@ int main() {
             }
         }
 
+        if(flip_vertical && flip_horizontal) {
+            cv::flip(input, input, -1);
+        } else if(flip_vertical && !flip_horizontal) {
+            cv::flip(input, input, 0);
+        } else if(flip_horizontal && !flip_vertical) {
+            cv::flip(input, input, 1);
+        }
+
         if(!headless || save_video) {
             input.copyTo(output);
         }
@@ -113,14 +123,21 @@ int main() {
             cv::cvtColor(input, input, cv::COLOR_BGR2YUV);
         }
         std::vector<targetfinder::Target> targets = tf.doTargetRecognition(input, output, show_state);
+        targetfinder::CameraModel cm = targetfinder::CameraModel(
+                input.rows, input.cols
+        );
 
+        std::cout << "{'targets': [";
         for(int i=0; i<targets.size(); i++) {
             if(targets[i].calc_valid) {
-                std::cout << i << ": " << targets[i].str() << ", fps: " << fps << std::endl;
+                cv::RotatedRect r = targets[i].rotatedRect();
+                float real_distance = cm.distance(r.size.width, r.size.height) * 0.001;
+                std::cout << "{" << targets[i].str();
+                std::cout << ", 'distance(m)': " << real_distance << "}" << std::endl;
                 if(!headless || save_video) {
-                    cv::RotatedRect r = targets[i].rotatedRect();
-                    cv::ellipse(output, r, cv::Scalar(0, 0, 0), 3);
-                    cv::ellipse(output, r, cv::Scalar(0, 0, 255), 1);
+                    // cv::ellipse(output, r, cv::Scalar(0, 0, 0), 3);
+                    // cv::ellipse(output, r, cv::Scalar(0, 0, 255), 1);
+
                     cv::circle(output, r.center, 5, cv::Scalar(0, 0, 0), -1);
                     cv::circle(output, r.center, 3, cv::Scalar(0, 0, 255), -1);
                     cv::Point endPoint = cv::Point(
@@ -132,6 +149,7 @@ int main() {
                 }
             }
         }
+        std::cout << "], 'fps': "<< fps << ", 'time': " << current << "}" << std::endl;
 
         std::vector<targetfinder::PersistentTarget> persistentTargets = tf.getPersistentTargets();
         for(int i=0; i<persistentTargets.size(); i++) {

@@ -82,32 +82,31 @@ void Target::calcGeometry() {
     float a1 = abs(a10 - a12);
     float a2 = abs(a20 - a21);
 
-    /* if(a0 > M_PI_2) a0 = M_PI - a0;
+    if(a0 > M_PI_2) a0 = M_PI - a0;
     if(a1 > M_PI_2) a1 = M_PI - a1;
-    if(a2 > M_PI_2) a2 = M_PI - a2; */
+    if(a2 > M_PI_2) a2 = M_PI - a2;
 
-    float centerx, centery;
     cv::Point center_one, center_two;
 
     if(a0 >= a1 && a0 >= a2) {
         this->corner = markers[0];
         this->cornerAngle = a0;
-        cv::Point center_one = markers[1]->center();
-        cv::Point center_two = markers[2]->center();
+        center_one = markers[1]->center();
+        center_two = markers[2]->center();
     }
 
     if(a1 >= a0 && a1 >= a2) {
         this->corner = markers[1];
         this->cornerAngle = a1;
-        cv::Point center_one = markers[0]->center();
-        cv::Point center_two = markers[2]->center();
+        center_one = markers[0]->center();
+        center_two = markers[2]->center();
     }
 
     if(a2 >= a0 && a2 >= a1) {
         this->corner = markers[2];
         this->cornerAngle = a2;
-        cv::Point center_one = markers[0]->center();
-        cv::Point center_two = markers[1]->center();
+        center_one = markers[0]->center();
+        center_two = markers[1]->center();
     }
 
     cv::Point new_center = cv::Point(
@@ -150,8 +149,10 @@ bool Target::isClose(std::shared_ptr<Marker> m) {
 std::string Target::str() {
     std::stringstream ss;
     cv::Rect rect = this->rect();
-    ss << "Target({rect: (" << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height << "), ";
-    ss << "angle: " << this->calc_angle << ", length: " << this->calc_length;
-    ss << ", markers: " << this->marker_count << "})";
+    ss << "'target': {'rect': {'x':" << rect.x << ", 'y':" << rect.y;
+    ss << ", 'w':" << rect.width << ", 'h':" << rect.height << "}, ";
+    ss << "'angle': " << this->calc_angle << ", 'length': " << this->calc_length;
+    // ss << ", markers: " << this->marker_count << "})";
+    ss << "}";
     return ss.str();
 }
