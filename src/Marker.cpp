@@ -2,6 +2,7 @@
 // Created by owain on 02/08/15.
 //
 
+#include "Utils.c"
 #include "TargetFinder.h"
 #include <math.h>
 
@@ -65,9 +66,7 @@ float Marker::distance(Marker one, Marker two) {
 float Marker::angle(Marker one, Marker two) {
     cv::Point a = one.center();
     cv::Point b = two.center();
-    float dx = b.x - a.x;
-    float dy = b.y - a.y;
-    return atan2(dy, dx);
+    return _angle(a.x, a.y, b.x, b.y);
 }
 
 void Marker::expand(Marker other, bool rotate) {

@@ -68,7 +68,7 @@ namespace targetfinder {
             bool updated = true;
             void calcGeometry();
             std::shared_ptr<Marker> corner;
-            float cornerAngle;
+            float corner_angle, angle_offset;
             float min_marker_distance, max_marker_distance, marker_size_tolerance;
     };
 
@@ -76,15 +76,22 @@ namespace targetfinder {
         friend class Target;
         friend class TargetFinder;
         public:
-            static constexpr int LIFETIME = 5;
-            void update(cv::RotatedRect new_rotated_rect, float influence=0.5);
-            static float similarity(cv::RotatedRect one, cv::RotatedRect two);
-            float similarity(cv::RotatedRect other);
-            cv::RotatedRect getRotatedRect();
+            void update(Target *new_target, int64 timestamp, float influence);
+            bool alive(int64 timestamp);
+            float similarity(Target other);
+            float angle();
+            cv::Rect rect();
+            cv::Point center();
+            void setTimeout(int64 ticks);
+            void setAngleOffset(float angle);
             std::string str();
+            long age();
         protected:
-            cv::RotatedRect rotatedRect;
-            int lifetime = LIFETIME;
+            int64 timeout_ticks;
+            int64 last_updated;
+            long lifetime;
+            int x, y, width, height;
+            float calc_angle, angle_offset;
     };
 
     class StateMachine {
@@ -151,6 +158,7 @@ namespace targetfinder {
             void setMarkerAspectTolerance(float tolerance);
             void setMarkerDistances(float min_distance, float max_distance);
             void setMarkerSizeTolerance(float tolerance);
+            void setAngleOffset(float angle);
 
         protected:
             std::vector<PersistentTarget> finalTargets;
@@ -162,9 +170,31 @@ namespace targetfinder {
             float min_marker_distance = Target::MIN_MARKER_DISTANCE;
             float max_marker_distance = Target::MAX_MARKER_DISTANCE;
             float marker_size_tolerance = Target::MARKER_SIZE_TOLERANCE;
+            float angle_offset = 0.0;
 
         private:
             static float aspect(int width, int height);
+    };
+
+    class Navigator {
+        public:
+            static constexpr float ROTATION_DEADZONE = 30.0;
+            static constexpr float AXES_DEADZONE = 0.1;
+            static constexpr float UPDATE_RATE = 0.1;
+            Navigator(int width, int height, float rotation_deadzone=ROTATION_DEADZONE,
+                      float horizontal_deadzone=AXES_DEADZONE, float vertical_deadzone=AXES_DEADZONE,
+                      float update_rate=UPDATE_RATE);
+            bool update(cv::Point target, float angle, float distance);
+            void update();
+            float horizontal();
+            float vertical();
+            float alt();
+            float rotation();
+            cv::Point image_point(int axis, int length=150);
+        protected:
+            int width, height;
+            cv::Point image_center;
+            float rotation_deadzone, horizontal_deadzone, vertical_deadzone, angle, distance, alpha, x, y;
     };
 
 }

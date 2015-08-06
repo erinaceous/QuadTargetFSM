@@ -18,7 +18,6 @@ CameraModel::CameraModel(int image_width, int image_height, float target_width, 
     this->sensor_height = sensor_height;
 }
 
-#define MAX(a, b) ((a > b) ? a : b)
 float CameraModel::distance(int calc_width, int calc_height) {
     int calc_size = MAX(calc_width, calc_height);
     int image_size = MAX(this->image_width, this->image_height);

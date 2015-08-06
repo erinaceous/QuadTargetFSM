@@ -5,6 +5,7 @@
 #include <math.h>
 #include <opencv2/opencv.hpp>
 #include "TargetFinder.h"
+#include "Utils.c"
 
 using namespace targetfinder;
 
@@ -87,29 +88,29 @@ void Target::calcGeometry() {
     float a1 = abs(a10 - a12);
     float a2 = abs(a20 - a21);
 
-    if(a0 > M_PI_2) a0 = M_PI - a0;
-    if(a1 > M_PI_2) a1 = M_PI - a1;
-    if(a2 > M_PI_2) a2 = M_PI - a2;
+    if(a0 > M_PI_2) a0 -= M_PI_2;
+    if(a1 > M_PI_2) a1 -= M_PI_2;
+    if(a2 > M_PI_2) a2 -= M_PI_2;
 
     cv::Point center_one, center_two;
 
     if(a0 >= a1 && a0 >= a2) {
         this->corner = markers[0];
-        this->cornerAngle = a0;
+        this->corner_angle = a0;
         center_one = markers[1]->center();
         center_two = markers[2]->center();
     }
 
     if(a1 >= a0 && a1 >= a2) {
         this->corner = markers[1];
-        this->cornerAngle = a1;
+        this->corner_angle = a1;
         center_one = markers[0]->center();
         center_two = markers[2]->center();
     }
 
     if(a2 >= a0 && a2 >= a1) {
         this->corner = markers[2];
-        this->cornerAngle = a2;
+        this->corner_angle = a2;
         center_one = markers[0]->center();
         center_two = markers[1]->center();
     }
@@ -156,7 +157,7 @@ std::string Target::str() {
     cv::Rect rect = this->rect();
     ss << "\"target\": {\"rect\": {\"x\":" << rect.x << ", \"y\":" << rect.y;
     ss << ", \"w\":" << rect.width << ", \"h\":" << rect.height << "}, ";
-    ss << "\"angle\": " << this->calc_angle << ", \"length\": " << this->calc_length;
+    ss << "\"angle\": " << this->calc_angle + this->angle_offset << ", \"length\": " << this->calc_length;
     ss << "}";
     return ss.str();
 }

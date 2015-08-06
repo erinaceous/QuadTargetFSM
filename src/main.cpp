@@ -78,6 +78,12 @@ int main() {
     // cv::Mat processed;
     cv::Mat output;
     targetfinder::TargetFinder tf;
+    targetfinder::PersistentTarget target;
+    targetfinder::CameraModel cm(input.cols, input.rows);
+    targetfinder::Navigator nv(input.cols, input.rows);
+    float target_influence = pt.get<float>("parameters.target_alpha");
+    target.setTimeout(cv::getTickFrequency() * pt.get<float>("parameters.target_lifetime"));
+    target.setAngleOffset(pt.get<float>("camera.angle_offset"));
     tf.setRowStep(pt.get<int>("parameters.row_step"));
     tf.setMinLength(pt.get<int>("parameters.min_length"));
     tf.setTolerance(pt.get<float>("parameters.tolerance"));
@@ -88,6 +94,7 @@ int main() {
             pt.get<float>("parameters.max_marker_distance")
     );
     tf.setMarkerSizeTolerance(pt.get<float>("parameters.marker_size_tolerance"));
+    tf.setAngleOffset(pt.get<float>("camera.angle_offset"));
     bool show_state = pt.get<bool>("gui.show_state");
     bool convert_yuv = pt.get<bool>("camera.convert_yuv");
     bool flip_vertical = pt.get<bool>("camera.flip_vertical");
@@ -97,6 +104,7 @@ int main() {
     int64 current;
     float fps = 1.0;
     static constexpr float alphafps = 0.05;
+    cv::Point img_center(input.cols / 2, input.rows / 2);
     while(running) {
         current = cv::getTickCount();
         if (!test_image) {
@@ -122,46 +130,57 @@ int main() {
         if(convert_yuv) {
             cv::cvtColor(input, input, cv::COLOR_BGR2YUV);
         }
-        std::vector<targetfinder::Target> targets = tf.doTargetRecognition(input, output, show_state);
-        targetfinder::CameraModel cm = targetfinder::CameraModel(
-                input.rows, input.cols
-        );
 
-        std::cout << "{\"targets\": [";
+        std::vector<targetfinder::Target> targets = tf.doTargetRecognition(input, output, show_state);
+
+        targetfinder::Target *best_target = nullptr;
+        cv::Size best_target_size = cv::Size(0, 0);
         for(int i=0; i<targets.size(); i++) {
             if(targets[i].calc_valid) {
-                cv::Rect r = targets[i].rect();
-                cv::RotatedRect rr = targets[i].rotatedRect();
-                float real_distance = cm.distance(r.width, r.height) * 0.001;
-                float angle = targets[i].angle();
-                std::cout << "{" << targets[i].str();
-                std::cout << ", \"distance(m)\": " << real_distance << "}";
-                if(!headless || save_video) {
-                    cv::Scalar c_black = cv::Scalar(0, 0, 0);
-                    cv::Scalar c_red = cv::Scalar(0, 0, 255);
-                    cv::rectangle(output, r, c_black, 3);
-                    cv::rectangle(output, r, c_red, 1);
-                    cv::circle(output, rr.center, 5, c_black, -1);
-                    cv::Point endPoint = cv::Point(
-                            rr.center.x + r.width * cos(angle),
-                            rr.center.y + r.height * sin(angle)
-                    );
-                    cv::line(output, rr.center, endPoint, c_black, 3);
-                    cv::line(output, rr.center, endPoint, c_red, 1);
-                    cv::circle(output, rr.center, 3, c_red, -1);
+                cv::Size target_size = targets[i].rect().size();
+                if (target_size.width >= best_target_size.width
+                    && target_size.height >= best_target_size.height) {
+                    best_target_size = target_size;
+                    best_target = &targets[i];
                 }
             }
         }
-        std::cout << "], \"fps\": "<< fps << ", \"time\": " << current << "}" << std::endl;
-
-        std::vector<targetfinder::PersistentTarget> persistentTargets = tf.getPersistentTargets();
-        for(int i=0; i<persistentTargets.size(); i++) {
-            if(!headless) {
-                cv::RotatedRect r = persistentTargets[i].getRotatedRect();
-                cv::ellipse(output, r, cv::Scalar(0, 0, 0), 3);
-                cv::ellipse(output, r, cv::Scalar(0, 255, 0), 1);
-            }
+        std::cout << "{\"target\": ";
+        if(best_target) {
+            target.update(best_target, current, target_influence);
         }
+        if(target.alive(current)) {
+            cv::Rect r = target.rect();
+            cv::Point center = target.center();
+            float real_distance = cm.distance(r.width, r.height) * 0.001;
+            float angle = target.angle();
+            nv.update(center, angle, real_distance);
+            std::cout << "{" << target.str();
+            std::cout << ", \"distance(m)\": " << real_distance << "}";
+            if (!headless || save_video) {
+                cv::Scalar c_black = cv::Scalar(0, 0, 0);
+                cv::Scalar c_red = cv::Scalar(0, 0, 255);
+                cv::Scalar c_green = cv::Scalar(0, 255, 0);
+                cv::rectangle(output, r, c_black, 3);
+                cv::rectangle(output, r, c_red, 1);
+                cv::circle(output, center, 5, c_black, -1);
+                cv::Point endPoint = cv::Point(
+                        center.x + r.width * cos(angle),
+                        center.y + r.height * sin(angle)
+                );
+                cv::line(output, center, endPoint, c_black, 3);
+                cv::line(output, center, endPoint, c_red, 1);
+                cv::circle(output, center, 3, c_red, -1);
+                const char *distanceStr = "%0.2f m";
+                cv::putText(output, format(distanceStr, real_distance), center,
+                            cv::FONT_HERSHEY_SIMPLEX, 0.7, c_black, 4);
+                cv::putText(output, format(distanceStr, real_distance), center,
+                            cv::FONT_HERSHEY_SIMPLEX, 0.7, c_green, 2);
+            }
+        } else {
+            nv.update();
+        }
+        std::cout << ", \"fps\": "<< fps << ", \"time\": " << current << "}" << std::endl;
 
         int64 ticks = cv::getTickCount() - current;
         float rate = 1 / (ticks / cv::getTickFrequency());
@@ -174,6 +193,19 @@ int main() {
                         cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0), 3);
             cv::putText(output, format(tickStr, fps), cv::Point(10, 20),
                         cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 255));
+            int ll = 150;
+            cv::line(output, cv::Point(img_center.x, img_center.y - ll), cv::Point(img_center.x, img_center.y + ll),
+                     cv::Scalar(0, 0, 0), 3);
+            cv::line(output, cv::Point(img_center.x - ll, img_center.y), cv::Point(img_center.x + ll, img_center.y),
+                     cv::Scalar(0, 0, 0), 3);
+            cv::line(output, cv::Point(img_center.x, img_center.y - ll), cv::Point(img_center.x, img_center.y + ll),
+                     cv::Scalar(255, 255, 255), 1);
+            cv::line(output, cv::Point(img_center.x - ll, img_center.y), cv::Point(img_center.x + ll, img_center.y),
+                     cv::Scalar(255, 255, 255), 1);
+            cv::circle(output, nv.image_point(0, ll), 5, cv::Scalar(0, 0, 0), -1);
+            cv::circle(output, nv.image_point(0, ll), 3, cv::Scalar(0, 255, 0), -1);
+            cv::circle(output, nv.image_point(1, ll), 5, cv::Scalar(0, 0, 0), -1);
+            cv::circle(output, nv.image_point(1, ll), 3, cv::Scalar(0, 255, 0), -1);
         }
         if(save_video) {
             wri.write(output);

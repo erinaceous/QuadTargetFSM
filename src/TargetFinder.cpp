@@ -37,6 +37,10 @@ void TargetFinder::setMarkerSizeTolerance(float tolerance) {
     this->marker_size_tolerance = tolerance;
 }
 
+void TargetFinder::setAngleOffset(float angle) {
+    this->angle_offset = angle;
+}
+
 float TargetFinder::aspect(int width, int height) {
     if(height > width) {
         return ((float) height / (float) width);
@@ -165,6 +169,7 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
             target.min_marker_distance = this->min_marker_distance;
             target.max_marker_distance = this->max_marker_distance;
             target.marker_size_tolerance = this->marker_size_tolerance;
+            target.angle_offset = this->angle_offset;
             target.addMarker(markers[i]);
             targets.push_back(target);
         }
