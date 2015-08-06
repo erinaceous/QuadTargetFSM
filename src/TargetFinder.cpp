@@ -8,6 +8,10 @@
 
 using namespace targetfinder;
 
+void TargetFinder::setRowStep(int row_step) {
+    this->row_step = row_step;
+}
+
 void TargetFinder::setMinLength(int min_length) {
     this->min_length = min_length;
 }
@@ -62,7 +66,7 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
     float aspect = TargetFinder::aspect(input.cols, input.rows);
     int last_center_x = 0;
 
-    for(int y=0; y<input.rows; y++) {
+    for(int y=0; y<input.rows; y += this->row_step) {
         uchar *p = input.ptr(y);
         uchar *o = output.ptr(y);
         for(int b=0; b<this->num_bins; b++) {

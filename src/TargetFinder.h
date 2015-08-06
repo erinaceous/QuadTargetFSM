@@ -94,21 +94,22 @@ namespace targetfinder {
             static constexpr float TOLERANCE = 0.5;
             static constexpr int NUM_STATES = 7;
 
-            StateMachine(int input_length=0, float tolerance=TOLERANCE, int min_pixels=MIN_LENGTH, float aspect=1.0);
+            StateMachine(int input_length=0, float tolerance=TOLERANCE, int min_pixels=MIN_LENGTH);
             Marker* step(int x, int y, bool value);
             void reset(int y, bool value=false);
             cv::Vec3b state_colour();
             void setInputLength(int input_length);
             int state;
         protected:
-            bool in_bounds(int count, float scale=1.0);
+            bool in_bounds(int count, int scale=1);
             bool valid_transition(int x, bool value);
             void transition(int x, int y, bool value);
 
             bool last_value;
             int first_x, last_x, y, input_length, min_pixels, max_pixels;
+            int min_bound, max_bound;
             int pixel_counts[NUM_STATES];
-            float tolerance, aspect, min_bound, max_bound;
+            float tolerance;
     };
 
     class TargetFinder {
@@ -117,9 +118,11 @@ namespace targetfinder {
         public:
             static constexpr int THRESH_BINS = 1;
             static constexpr float MARKER_ASPECT_TOLERANCE = 0.9;
+            static constexpr int ROW_STEP = 1;
 
             std::vector<Target> doTargetRecognition(cv::Mat input, cv::Mat output, bool show_state=false);
             std::vector<PersistentTarget> getPersistentTargets();
+            void setRowStep(int row_step);
             void setMinLength(int min_length);
             void setTolerance(float tolerance);
             void setNumBins(int num_bins);
@@ -129,6 +132,7 @@ namespace targetfinder {
 
         protected:
             std::vector<PersistentTarget> finalTargets;
+            int row_step = ROW_STEP;
             int min_length = StateMachine::MIN_LENGTH;
             int num_bins = THRESH_BINS;
             float tolerance = StateMachine::TOLERANCE;

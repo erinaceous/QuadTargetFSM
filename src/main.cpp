@@ -76,6 +76,7 @@ int main() {
     // cv::Mat processed;
     cv::Mat output;
     targetfinder::TargetFinder tf;
+    tf.setRowStep(pt.get<int>("parameters.row_step"));
     tf.setMinLength(pt.get<int>("parameters.min_length"));
     tf.setTolerance(pt.get<float>("parameters.tolerance"));
     tf.setNumBins(pt.get<int>("parameters.num_bins"));

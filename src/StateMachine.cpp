@@ -6,26 +6,25 @@
 
 using namespace targetfinder;
 
-StateMachine::StateMachine(int input_length, float tolerance, int min_pixels, float aspect) {
+StateMachine::StateMachine(int input_length, float tolerance, int min_pixels) {
     this->input_length = input_length;
     this->tolerance = tolerance;
     this->min_pixels = min_pixels;
-    this->max_pixels = (int)((float)input_length / ((float)StateMachine::NUM_STATES - 2));
-    this->aspect = aspect;
-    this->min_bound = 0.0;
-    this->max_bound = 0.0;
+    // this->max_pixels = (int)((float)input_length / ((float)StateMachine::NUM_STATES - 2));
+    this->min_bound = 0;
+    this->max_bound = 0;
 }
 
 void StateMachine::setInputLength(int input_length) {
     this->input_length = input_length;
 }
 
-bool StateMachine::in_bounds(int count, float scale) {
+bool StateMachine::in_bounds(int count, int scale) {
     return count >= (this->min_bound * scale) && count <= (this->max_bound * scale)
-            && count <= (this->max_pixels * scale);
+            /*&& count <= (this->max_pixels * scale)*/;
 }
 #define IN_BOUNDS(x) this->in_bounds(this->pixel_counts[x])
-#define IN_BOUNDS3(x) this->in_bounds(this->pixel_counts[x], 3.0)
+#define IN_BOUNDS3(x) this->in_bounds(this->pixel_counts[x], 3)
 
 void StateMachine::reset(int y, bool value) {
     this->last_value = value;
@@ -36,8 +35,8 @@ void StateMachine::reset(int y, bool value) {
         this->pixel_counts[i] = 0;
     }
     this->state = 0;
-    this->min_bound = 0.0;
-    this->max_bound = 0.0;
+    this->min_bound = 0;
+    this->max_bound = 0;
 }
 
 bool StateMachine::valid_transition(int x, bool value) {
@@ -45,10 +44,10 @@ bool StateMachine::valid_transition(int x, bool value) {
         case 0:
             return (!value && x != 0);
         case 1:
-            this->min_bound = (this->aspect * ((float)this->pixel_counts[1] * this->tolerance));
-            this->max_bound = (this->aspect * ((float)this->pixel_counts[1] / this->tolerance));
+            this->min_bound = (int) (((float)this->pixel_counts[1] * this->tolerance));
+            this->max_bound = (int) (((float)this->pixel_counts[1] / this->tolerance));
             return (value && this->pixel_counts[1] >= this->min_pixels
-                    && this->pixel_counts[1] <= this->max_pixels);
+                    /*&& this->pixel_counts[1] <= this->max_pixels*/);
         case 2:
         case 4:
             return (!value && IN_BOUNDS(this->state));
@@ -88,17 +87,17 @@ Marker* StateMachine::step(int x, int y, bool value) {
         }
         this->transition(x, y, value);
     }
-    this->pixel_counts[this->state] += 1;
-    if(this->state == 1) {
+    this->pixel_counts[this->state]++;
+    /* if(this->state == 1) {
         if(this->pixel_counts[1] > this->max_pixels) {
             this->reset(y, value);
         }
-    } else if(this->state > 1) {
-        float max_bound = this->max_bound;
+    } else */ if(this->state > 1) {
+        int max_bound = this->max_bound;
         if(this->state == 3) {
-            max_bound *= 3.0;
+            max_bound *= 3;
         }
-        if(this->pixel_counts[this->state] > max_bound || this->pixel_counts[this->state] > this->max_pixels) {
+        if(this->pixel_counts[this->state] > max_bound/* || this->pixel_counts[this->state] > this->max_pixels*/) {
             this->reset(y, value);
         }
     }
