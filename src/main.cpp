@@ -21,7 +21,7 @@ using namespace cv;
 bool debug = false;
 #define DEBUGPRINT(x) { if(debug) { std::cerr << x << std::endl; }}
 
-int main() {
+int main(int argc, char* argv[]) {
     boost::property_tree::ptree pt;
     char* config_path = getenv("QUADTARGET_CONFIG");
     if(config_path == NULL) {
@@ -38,7 +38,12 @@ int main() {
     bool test_image = false;
     int wait_key = pt.get<int>("gui.waitKey");
     string video_file = pt.get<string>("camera.file");
-    string save_video_file = pt.get<string>("gui.save_video");
+    string save_video_file;
+    if(argc == 2) {
+        save_video_file = string(argv[1]);
+    } else {
+        save_video_file = pt.get<string>("gui.save_video");
+    }
     int desired_fps = pt.get<int>("camera.fps");
 
 
@@ -178,8 +183,10 @@ int main() {
                             cv::FONT_HERSHEY_SIMPLEX, 0.7, c_green, 2);
             }
         } else {
+            std::cout << "null";
             nv.update();
         }
+        std::cout << ", \"sticks\": {" << nv.str() << "}";
         std::cout << ", \"fps\": "<< fps << ", \"time\": " << current << "}" << std::endl;
 
         int64 ticks = cv::getTickCount() - current;

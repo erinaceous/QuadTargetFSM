@@ -85,3 +85,9 @@ cv::Point Navigator::image_point(int axis, int length) {
             );
     }
 }
+
+std::string Navigator::str() {
+    std::stringstream ss;
+    ss << "\"roll\": " << this->x << ", \"pitch\": " << this->y << ", \"yaw\": " << this->angle;
+    return ss.str();
+}

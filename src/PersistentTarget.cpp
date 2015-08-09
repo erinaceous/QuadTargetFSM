@@ -64,7 +64,7 @@ long PersistentTarget::age() {
 
 std::string PersistentTarget::str() {
     std::stringstream ss;
-    ss << "\"rect\": {\"x\": " << this->x << ", \"y\": " << this->y;
+    ss << "\"x\": " << this->x << ", \"y\": " << this->y;
     ss << ", \"w\": " << this->width << ", \"h\": " << this->height;
     ss << ", \"angle\": " << _degrees(this->calc_angle + this->angle_offset) << ", \"updated\": " << this->last_updated;
     ss << ", \"age\": " << this->lifetime;

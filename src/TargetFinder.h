@@ -191,6 +191,7 @@ namespace targetfinder {
             float alt();
             float rotation();
             cv::Point image_point(int axis, int length=150);
+            std::string str();
         protected:
             int width, height;
             cv::Point image_center;
