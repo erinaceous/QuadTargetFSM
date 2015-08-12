@@ -8,9 +8,9 @@
 
 using namespace targetfinder;
 
-void PersistentTarget::update(Target *new_target, int64 timestamp, float influence) {
+void PersistentTarget::update(Target *new_target, int64 timestamp, double influence) {
     cv::Rect other_rect = new_target->rect();
-    float other_angle = new_target->angle();
+    double other_angle = new_target->angle();
     if(!this->alive(timestamp)) {
         this->x = other_rect.x;
         this->y = other_rect.y;
@@ -33,7 +33,7 @@ bool PersistentTarget::alive(int64 timestamp) {
     return (this->last_updated + this->timeout_ticks) >= timestamp;
 }
 
-float PersistentTarget::angle() {
+double PersistentTarget::angle() {
     return this->calc_angle;
 }
 
@@ -54,7 +54,7 @@ void PersistentTarget::setTimeout(int64 ticks) {
     this->timeout_ticks = ticks;
 }
 
-void PersistentTarget::setAngleOffset(float angle) {
+void PersistentTarget::setAngleOffset(double angle) {
     this->angle_offset = angle;
 }
 

@@ -25,10 +25,10 @@ namespace targetfinder {
             int ylength();
             bool contains(Marker other);
             bool contains(cv::Point other);
-            bool contains(float x, float y);
-            float distance(Marker other);
-            static float distance(Marker one, Marker two);
-            static float angle(Marker one, Marker two);
+            bool contains(double x, double y);
+            double distance(Marker other);
+            static double distance(Marker one, Marker two);
+            static double angle(Marker one, Marker two);
             cv::Rect rect();
             std::shared_ptr<Marker> cloned_shared_ptr();
         protected:
@@ -42,16 +42,16 @@ namespace targetfinder {
         friend class Marker;
         friend class TargetFinder;
         public:
-            static constexpr float MIN_MARKER_DISTANCE = 0.5;
-            static constexpr float MAX_MARKER_DISTANCE = 5.0;
-            static constexpr float MARKER_SIZE_TOLERANCE = 0.7;
+            static constexpr double MIN_MARKER_DISTANCE = 0.5;
+            static constexpr double MAX_MARKER_DISTANCE = 5.0;
+            static constexpr double MARKER_SIZE_TOLERANCE = 0.7;
 
             // Target();
             // ~Target();
             bool valid();
             bool addMarker(std::shared_ptr<Marker> m);
-            float angle();
-            float length();
+            double angle();
+            double length();
             cv::Rect rect();
             cv::RotatedRect rotatedRect();
             cv::Point center();
@@ -62,28 +62,28 @@ namespace targetfinder {
         protected:
             std::shared_ptr<Marker> markers[3];
             int marker_count = 0;
-            float calc_angle, calc_length;
+            double calc_angle, calc_length;
             cv::Rect bounding_box;
             cv::Point center_point;
             bool updated = true;
             void calcGeometry();
             std::shared_ptr<Marker> corner;
-            float corner_angle, angle_offset;
-            float min_marker_distance, max_marker_distance, marker_size_tolerance;
+            double corner_angle, angle_offset;
+            double min_marker_distance, max_marker_distance, marker_size_tolerance;
     };
 
     class PersistentTarget {
         friend class Target;
         friend class TargetFinder;
         public:
-            void update(Target *new_target, int64 timestamp, float influence);
+            void update(Target *new_target, int64 timestamp, double influence);
             bool alive(int64 timestamp);
-            float similarity(Target other);
-            float angle();
+            double similarity(Target other);
+            double angle();
             cv::Rect rect();
             cv::Point center();
             void setTimeout(int64 ticks);
-            void setAngleOffset(float angle);
+            void setAngleOffset(double angle);
             std::string str();
             int age();
         protected:
@@ -91,22 +91,23 @@ namespace targetfinder {
             int64 last_updated;
             int lifetime;
             int x, y, width, height;
-            float calc_angle, angle_offset;
+            double calc_angle, angle_offset;
     };
 
     class StateMachine {
         friend class Marker;
         public:
             static constexpr int MIN_LENGTH = 1;
-            static constexpr float TOLERANCE = 0.5;
+            static constexpr double TOLERANCE = 0.5;
             static constexpr int NUM_STATES = 7;
 
-            StateMachine(int input_length=0, float tolerance=TOLERANCE, int min_pixels=MIN_LENGTH);
+            StateMachine(int input_length=0, double tolerance=TOLERANCE, int min_pixels=MIN_LENGTH);
             Marker* step(int x, int y, bool value);
             void reset(int y, bool value=false);
             cv::Vec3b state_colour();
             void setInputLength(int input_length);
             int state;
+
         protected:
             bool in_bounds(int count, int scale=1);
             bool valid_transition(int x, bool value);
@@ -116,29 +117,31 @@ namespace targetfinder {
             int first_x, last_x, y, input_length, min_pixels, max_pixels;
             int min_bound, max_bound;
             int pixel_counts[NUM_STATES];
-            float tolerance;
+            double tolerance;
+
+
     };
 
     class CameraModel {
         friend class TargetFinder;
         public:
-            static constexpr float FOCAL_LENGTH = 3.6;
-            static constexpr float SENSOR_WIDTH = 3.67;
-            static constexpr float SENSOR_HEIGHT = 2.74;
-            static constexpr float MAGNIFICATION_FACTOR = 1.0;
-            static constexpr float TARGET_WIDTH = 594;
-            static constexpr float TARGET_HEIGHT = 420;
+            static constexpr double FOCAL_LENGTH = 3.6;
+            static constexpr double SENSOR_WIDTH = 3.67;
+            static constexpr double SENSOR_HEIGHT = 2.74;
+            static constexpr double MAGNIFICATION_FACTOR = 1.0;
+            static constexpr double TARGET_WIDTH = 594;
+            static constexpr double TARGET_HEIGHT = 420;
 
-            float distance(int calc_width, int calc_height);
-            CameraModel(int image_width, int image_height, float target_width=TARGET_WIDTH,
-                        float target_height=TARGET_HEIGHT, float focal_length=FOCAL_LENGTH,
-                        float magnification_factor=MAGNIFICATION_FACTOR, float sensor_width=SENSOR_WIDTH,
-                        float sensor_height=SENSOR_HEIGHT);
+            double distance(int calc_width, int calc_height);
+            CameraModel(int image_width, int image_height, double target_width=TARGET_WIDTH,
+                        double target_height=TARGET_HEIGHT, double focal_length=FOCAL_LENGTH,
+                        double magnification_factor=MAGNIFICATION_FACTOR, double sensor_width=SENSOR_WIDTH,
+                        double sensor_height=SENSOR_HEIGHT);
         protected:
             int image_width, image_height;
-            float target_width = TARGET_WIDTH, target_height = TARGET_HEIGHT;
-            float focal_length = FOCAL_LENGTH, magnification_factor = MAGNIFICATION_FACTOR;
-            float sensor_width = SENSOR_WIDTH, sensor_height = SENSOR_HEIGHT;
+            double target_width = TARGET_WIDTH, target_height = TARGET_HEIGHT;
+            double focal_length = FOCAL_LENGTH, magnification_factor = MAGNIFICATION_FACTOR;
+            double sensor_width = SENSOR_WIDTH, sensor_height = SENSOR_HEIGHT;
     };
 
     class TargetFinder {
@@ -146,56 +149,74 @@ namespace targetfinder {
         friend class Target;
         public:
             static constexpr int THRESH_BINS = 1;
-            static constexpr float MARKER_ASPECT_TOLERANCE = 0.9;
+            static constexpr double MARKER_ASPECT_TOLERANCE = 0.9;
             static constexpr int ROW_STEP = 1;
 
             std::vector<Target> doTargetRecognition(cv::Mat input, cv::Mat output, bool show_state=false);
             std::vector<PersistentTarget> getPersistentTargets();
             void setRowStep(int row_step);
             void setMinLength(int min_length);
-            void setTolerance(float tolerance);
+            void setTolerance(double tolerance);
             void setNumBins(int num_bins);
-            void setMarkerAspectTolerance(float tolerance);
-            void setMarkerDistances(float min_distance, float max_distance);
-            void setMarkerSizeTolerance(float tolerance);
-            void setAngleOffset(float angle);
+            void setMarkerAspectTolerance(double tolerance);
+            void setMarkerDistances(double min_distance, double max_distance);
+            void setMarkerSizeTolerance(double tolerance);
+            void setAngleOffset(double angle);
 
         protected:
             std::vector<PersistentTarget> finalTargets;
             int row_step = ROW_STEP;
             int min_length = StateMachine::MIN_LENGTH;
             int num_bins = THRESH_BINS;
-            float tolerance = StateMachine::TOLERANCE;
-            float marker_aspect_tolerance = MARKER_ASPECT_TOLERANCE;
-            float min_marker_distance = Target::MIN_MARKER_DISTANCE;
-            float max_marker_distance = Target::MAX_MARKER_DISTANCE;
-            float marker_size_tolerance = Target::MARKER_SIZE_TOLERANCE;
-            float angle_offset = 0.0;
+            double tolerance = StateMachine::TOLERANCE;
+            double marker_aspect_tolerance = MARKER_ASPECT_TOLERANCE;
+            double min_marker_distance = Target::MIN_MARKER_DISTANCE;
+            double max_marker_distance = Target::MAX_MARKER_DISTANCE;
+            double marker_size_tolerance = Target::MARKER_SIZE_TOLERANCE;
+            double angle_offset = 0.0;
 
         private:
-            static float aspect(int width, int height);
+            static double aspect(int width, int height);
     };
 
     class Navigator {
         public:
-            static constexpr float ROTATION_DEADZONE = 30.0;
-            static constexpr float AXES_DEADZONE = 0.1;
-            static constexpr float UPDATE_RATE = 0.1;
-            Navigator(int width, int height, float rotation_deadzone=ROTATION_DEADZONE,
-                      float horizontal_deadzone=AXES_DEADZONE, float vertical_deadzone=AXES_DEADZONE,
-                      float update_rate=UPDATE_RATE);
-            bool update(cv::Point target, float angle, float distance, int age);
-            void update();
-            float horizontal();
-            float vertical();
-            float alt();
-            float rotation();
+            static constexpr double ROTATION_DEADZONE = 30.0;
+            static constexpr double AXES_DEADZONE = 0.1;
+            static constexpr double UPDATE_RATE = 0.1;
+            Navigator(int width, int height, double rotation_deadzone=ROTATION_DEADZONE,
+                      double horizontal_deadzone=AXES_DEADZONE, double vertical_deadzone=AXES_DEADZONE,
+                      double update_rate=UPDATE_RATE);
+            bool update(cv::Point target, double angle, double distance, int age, double deltatime);
+            void update(double deltatime);
+            double horizontal();
+            double vertical();
+            double alt();
+            double rotation();
             cv::Point image_point(int axis, int length=150);
             std::string str();
+            void setPIDs(
+                    double pitch_P, double pitch_I, double pitch_D,
+                    double roll_P, double roll_I, double roll_D,
+                    double yaw_P=0.1, double yaw_I=0.1, double yaw_D=0.0,
+                    double throt_P=0.1, double throt_I=0.1, double throt_D=0.0
+            );
+
+            class PID {
+                public:
+                    PID(double Kp=0.9, double Ki=0.1, double Kd=0.0);
+                    double step(double setpoint, double value, double deltatime);
+                    double Kp, Ki, Kd;
+                    void reset(double value);
+                protected:
+                    double previous_error;
+                    double integral;
+            };
         protected:
             int width, height;
             cv::Point image_center;
-            float rotation_deadzone, horizontal_deadzone, vertical_deadzone, angle, distance, alpha, x, y;
+            double rotation_deadzone, horizontal_deadzone, vertical_deadzone, angle, distance, alpha, x, y;
+            PID *pitch_pid, *roll_pid, *throttle_pid, *yaw_pid;
     };
 
 }

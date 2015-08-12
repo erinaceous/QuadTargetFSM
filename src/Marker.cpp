@@ -50,12 +50,12 @@ cv::Point Marker::center() {
 
 cv::Point2f Marker::centerf() {
     return cv::Point2f(
-            (float)this->start_x + ((this->end_x - this->start_x) / 2.0),
-            (float)this->start_y + ((this->end_y - this->start_y) / 2.0)
+            (double)this->start_x + ((this->end_x - this->start_x) / 2.0),
+            (double)this->start_y + ((this->end_y - this->start_y) / 2.0)
     );
 }
 
-float Marker::distance(Marker one, Marker two) {
+double Marker::distance(Marker one, Marker two) {
     cv::Point a = one.center();
     cv::Point b = two.center();
     return sqrt(
@@ -63,7 +63,7 @@ float Marker::distance(Marker one, Marker two) {
     );
 }
 
-float Marker::angle(Marker one, Marker two) {
+double Marker::angle(Marker one, Marker two) {
     cv::Point a = one.center();
     cv::Point b = two.center();
     return _angle(a.x, a.y, b.x, b.y);

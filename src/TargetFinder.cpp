@@ -16,7 +16,7 @@ void TargetFinder::setMinLength(int min_length) {
     this->min_length = min_length;
 }
 
-void TargetFinder::setTolerance(float tolerance) {
+void TargetFinder::setTolerance(double tolerance) {
     this->tolerance = tolerance;
 }
 
@@ -24,28 +24,28 @@ void TargetFinder::setNumBins(int num_bins) {
     this->num_bins = num_bins;
 }
 
-void TargetFinder::setMarkerAspectTolerance(float tolerance) {
+void TargetFinder::setMarkerAspectTolerance(double tolerance) {
     this->marker_aspect_tolerance = tolerance;
 }
 
-void TargetFinder::setMarkerDistances(float min_distance, float max_distance) {
+void TargetFinder::setMarkerDistances(double min_distance, double max_distance) {
     this->min_marker_distance = min_distance;
     this->max_marker_distance = max_distance;
 }
 
-void TargetFinder::setMarkerSizeTolerance(float tolerance) {
+void TargetFinder::setMarkerSizeTolerance(double tolerance) {
     this->marker_size_tolerance = tolerance;
 }
 
-void TargetFinder::setAngleOffset(float angle) {
+void TargetFinder::setAngleOffset(double angle) {
     this->angle_offset = angle;
 }
 
-float TargetFinder::aspect(int width, int height) {
+double TargetFinder::aspect(int width, int height) {
     if(height > width) {
-        return ((float) height / (float) width);
+        return ((double) height / (double) width);
     }
-    return ((float) width / (float) height);
+    return ((double) width / (double) height);
 }
 
 std::vector<PersistentTarget> TargetFinder::getPersistentTargets() {
@@ -67,7 +67,7 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
     }
     StateMachine sm2(input.rows);       // Vertically-scanning state machine
 
-    float aspect = TargetFinder::aspect(input.cols, input.rows);
+    double aspect = TargetFinder::aspect(input.cols, input.rows);
     int last_center_x = 0;
 
     for(int y=0; y<input.rows; y += this->row_step) {
@@ -135,9 +135,9 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
                         }
                         if (m2) {
                             int min_pixels = this->min_length * StateMachine::NUM_STATES;
-                            float marker_aspect = TargetFinder::aspect(m->xlength(), m->ylength());
-                            float min_marker_aspect = this->marker_aspect_tolerance;
-                            float max_marker_aspect = 1.0 + this->marker_aspect_tolerance;
+                            double marker_aspect = TargetFinder::aspect(m->xlength(), m->ylength());
+                            double min_marker_aspect = this->marker_aspect_tolerance;
+                            double max_marker_aspect = 1.0 + this->marker_aspect_tolerance;
                             if (m->ylength() >= min_pixels && m->xlength() >= min_pixels
                                 && marker_aspect >= min_marker_aspect && marker_aspect <= max_marker_aspect) {
                                 markers.push_back(std::shared_ptr<Marker>(m));

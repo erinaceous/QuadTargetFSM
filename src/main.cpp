@@ -89,20 +89,29 @@ int main(int argc, char* argv[]) {
     targetfinder::PersistentTarget *target = new targetfinder::PersistentTarget();
     targetfinder::CameraModel *cm = new targetfinder::CameraModel(input->cols, input->rows);
     targetfinder::Navigator *nv = new targetfinder::Navigator(input->cols, input->rows);
-    float target_influence = pt.get<float>("parameters.target_alpha");
-    target->setTimeout(cv::getTickFrequency() * pt.get<float>("parameters.target_lifetime"));
-    target->setAngleOffset(pt.get<float>("camera.angle_offset"));
+    nv->setPIDs(
+            pt.get<double>("navigator.pitch_p"),
+            pt.get<double>("navigator.pitch_i"),
+            pt.get<double>("navigator.pitch_d"),
+            pt.get<double>("navigator.roll_p"),
+            pt.get<double>("navigator.roll_i"),
+            pt.get<double>("navigator.roll_d")
+    );
+
+    double target_influence = pt.get<double>("parameters.target_alpha");
+    target->setTimeout(cv::getTickFrequency() * pt.get<double>("parameters.target_lifetime"));
+    target->setAngleOffset(pt.get<double>("camera.angle_offset"));
     tf->setRowStep(pt.get<int>("parameters.row_step"));
     tf->setMinLength(pt.get<int>("parameters.min_length"));
-    tf->setTolerance(pt.get<float>("parameters.tolerance"));
+    tf->setTolerance(pt.get<double>("parameters.tolerance"));
     tf->setNumBins(pt.get<int>("parameters.num_bins"));
-    tf->setMarkerAspectTolerance(pt.get<float>("parameters.marker_aspect_tolerance"));
+    tf->setMarkerAspectTolerance(pt.get<double>("parameters.marker_aspect_tolerance"));
     tf->setMarkerDistances(
-            pt.get<float>("parameters.min_marker_distance"),
-            pt.get<float>("parameters.max_marker_distance")
+            pt.get<double>("parameters.min_marker_distance"),
+            pt.get<double>("parameters.max_marker_distance")
     );
-    tf->setMarkerSizeTolerance(pt.get<float>("parameters.marker_size_tolerance"));
-    tf->setAngleOffset(pt.get<float>("camera.angle_offset"));
+    tf->setMarkerSizeTolerance(pt.get<double>("parameters.marker_size_tolerance"));
+    tf->setAngleOffset(pt.get<double>("camera.angle_offset"));
     bool show_state = pt.get<bool>("gui.show_state");
     bool convert_yuv = pt.get<bool>("camera.convert_yuv");
     bool flip_vertical = pt.get<bool>("camera.flip_vertical");
@@ -110,8 +119,8 @@ int main(int argc, char* argv[]) {
     bool running = true;
     int64 start = cv::getTickCount();
     int64 current;
-    float fps = 1.0;
-    static constexpr float alphafps = 0.05;
+    double fps = 1.0;
+    static constexpr double alphafps = 0.05;
     cv::Point img_center(input->cols / 2, input->rows / 2);
     while(running) {
         current = cv::getTickCount();
@@ -157,12 +166,16 @@ int main(int argc, char* argv[]) {
         if(best_target) {
             target->update(best_target, current, target_influence);
         }
+
+        int64 ticks = cv::getTickCount() - current;
+        double delta = ticks / cv::getTickFrequency();
+
         if(target->alive(current)) {
             cv::Rect r = target->rect();
             cv::Point center = target->center();
-            float real_distance = cm->distance(r.width, r.height) * 0.001;
-            float angle = target->angle();
-            nv->update(center, angle, real_distance, target->age());
+            double real_distance = cm->distance(r.width, r.height) * 0.001;
+            double angle = target->angle();
+            nv->update(center, angle, real_distance, target->age(), delta);
             std::cout << "{" << target->str();
             std::cout << ", \"distance(m)\": " << real_distance << "}";
             if (!headless || save_video) {
@@ -187,14 +200,14 @@ int main(int argc, char* argv[]) {
             }
         } else {
             std::cout << "null";
-            nv->update();
+            nv->update(delta);
         }
+
+        double hz = 1.0 / delta;
+        fps += alphafps * (hz - fps);
+
         std::cout << ", \"sticks\": {" << nv->str() << "}";
         std::cout << ", \"fps\": "<< fps << ", \"time\": " << current << "}" << std::endl;
-
-        int64 ticks = cv::getTickCount() - current;
-        float rate = 1 / (ticks / cv::getTickFrequency());
-        fps = (alphafps * rate) + (1.0 - alphafps) * fps;
 
         if(!headless || save_video) {
             // cv::imshow("input", input);

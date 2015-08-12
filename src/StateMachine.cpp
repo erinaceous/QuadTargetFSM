@@ -6,11 +6,11 @@
 
 using namespace targetfinder;
 
-StateMachine::StateMachine(int input_length, float tolerance, int min_pixels) {
+StateMachine::StateMachine(int input_length, double tolerance, int min_pixels) {
     this->input_length = input_length;
     this->tolerance = tolerance;
     this->min_pixels = min_pixels;
-    this->max_pixels = (int)((float)input_length / ((float)StateMachine::NUM_STATES - 2));
+    this->max_pixels = (int)((double)input_length / ((double)StateMachine::NUM_STATES - 2));
     this->min_bound = 0;
     this->max_bound = 0;
 }
@@ -44,8 +44,8 @@ bool StateMachine::valid_transition(int x, bool value) {
         case 0:
             return (!value && x != 0);
         case 1:
-            this->min_bound = (int) (((float)this->pixel_counts[1] * this->tolerance));
-            this->max_bound = (int) (((float)this->pixel_counts[1] / this->tolerance));
+            this->min_bound = (int) (((double)this->pixel_counts[1] * this->tolerance));
+            this->max_bound = (int) (((double)this->pixel_counts[1] / this->tolerance));
             return (value && this->pixel_counts[1] >= this->min_pixels
                     && this->pixel_counts[1] <= this->max_pixels);
         case 2:
