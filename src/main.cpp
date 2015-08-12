@@ -12,13 +12,14 @@
 #include <regex>
 #include <opencv2/opencv.hpp>
 #include "TargetFinder.h"
+#include "SocketCamera.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
 using namespace std;
 using namespace cv;
 
-bool debug = false;
+static bool debug = false;
 #define DEBUGPRINT(x) { if(debug) { std::cerr << x << std::endl; }}
 
 int main(int argc, char* argv[]) {
@@ -33,7 +34,6 @@ int main(int argc, char* argv[]) {
 
     debug = pt.get<bool>("gui.debug");
     bool headless = pt.get<bool>("gui.headless");
-    bool loop_video = false;
     bool save_video = false;
     bool test_image = false;
     int wait_key = pt.get<int>("gui.waitKey");
@@ -47,29 +47,31 @@ int main(int argc, char* argv[]) {
     int desired_fps = pt.get<int>("camera.fps");
 
 
-    VideoCapture cap;
+    VideoCapture *cap;
     if(std::isdigit(video_file[0])) {
-        cap = VideoCapture(pt.get<int>("camera.file"));
+        cap = new VideoCapture(pt.get<int>("camera.file"));
     } else if(video_file.rfind(".png") != std::string::npos) {
         test_image = true;
+    } else if(video_file.rfind(':') != std::string::npos) {
+        cap = new SocketCamera(video_file);
     } else {
-        cap = VideoCapture(video_file);
-        loop_video = true;
+        cap = new VideoCapture(video_file);
     }
-    if(!cap.isOpened()) {
-        cerr << "Couldn't open webcam or video" << endl;
+    if(!cap->isOpened()) {
+        DEBUGPRINT("Couldn't open webcam or video");
         // return -1;
     }
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, pt.get<int>("camera.width"));
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, pt.get<int>("camera.height"));
-    cap.set(CV_CAP_PROP_FPS, desired_fps);
-    cap.set(CV_CAP_PROP_CONVERT_RGB, pt.get<bool>("camera.convert_rgb"));
+
+    cap->set(CV_CAP_PROP_FRAME_WIDTH, pt.get<int>("camera.width"));
+    cap->set(CV_CAP_PROP_FRAME_HEIGHT, pt.get<int>("camera.height"));
+    cap->set(CV_CAP_PROP_FPS, desired_fps);
+    cap->set(CV_CAP_PROP_CONVERT_RGB, pt.get<bool>("camera.convert_rgb"));
 
     cv::Mat input;
     if(test_image) {
         input = cv::imread(video_file);
     } else {
-        cap.read(input);
+        cap->read(input);
     }
 
     VideoWriter wri;
@@ -113,7 +115,7 @@ int main(int argc, char* argv[]) {
     while(running) {
         current = cv::getTickCount();
         if (!test_image) {
-            if(!cap.read(input)) {
+            if(!cap->read(input)) {
                 DEBUGPRINT("couldn't get video frame");
                 cv::waitKey(1000);
                 continue;
