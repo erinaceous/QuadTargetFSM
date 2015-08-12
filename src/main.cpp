@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
             cv::Point center = target.center();
             float real_distance = cm.distance(r.width, r.height) * 0.001;
             float angle = target.angle();
-            nv.update(center, angle, real_distance);
+            nv.update(center, angle, real_distance, target.age());
             std::cout << "{" << target.str();
             std::cout << ", \"distance(m)\": " << real_distance << "}";
             if (!headless || save_video) {

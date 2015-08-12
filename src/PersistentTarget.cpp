@@ -58,7 +58,7 @@ void PersistentTarget::setAngleOffset(float angle) {
     this->angle_offset = angle;
 }
 
-long PersistentTarget::age() {
+int PersistentTarget::age() {
     return this->lifetime;
 }
 

@@ -20,20 +20,33 @@ Navigator::Navigator(int width, int height, float rotation_deadzone, float horiz
     this->x = 0.5, this->y = 0.5;
 }
 
-bool Navigator::update(cv::Point target, float angle, float distance) {
+bool Navigator::update(cv::Point target, float angle, float distance, int age) {
+    if(target.x > this->width) {
+        target.x = this->width;
+    }
+    if(target.x < 0) {
+        target.x = 0;
+    }
+    if(target.y > this->height) {
+        target.y = this->height;
+    }
+    if(target.y < 0) {
+        target.y = 0;
+    }
+    float scale = ((float) age * 0.1) * this->alpha;
     float target_x = target.x / (float) this->width;
     float target_y = target.y / (float) this->height;
     if(target_x < (0.5 - this->horizontal_deadzone)
        || target_x > (0.5 + this->horizontal_deadzone)) {
-        this->x += (target_x - 0.5) * this->alpha;
+        this->x += (target_x - 0.5) * scale;
     } else {
-        this->x += (0.5 - this->x) * this->alpha;
+        this->x += (0.5 - this->x) * scale;
     }
     if(target_y < (0.5 - this->vertical_deadzone)
        || target_y > (0.5 + this->vertical_deadzone)) {
-        this->y += (target_y - 0.5) * this->alpha;
+        this->y += (target_y - 0.5) * scale;
     } else {
-        this->y += (0.5 - this->y) * this->alpha;
+        this->y += (0.5 - this->y) * scale;
     }
     if(angle < -this->rotation_deadzone || angle > this->rotation_deadzone) {
         if(angle > 0 && angle <= 180) {

@@ -85,11 +85,11 @@ namespace targetfinder {
             void setTimeout(int64 ticks);
             void setAngleOffset(float angle);
             std::string str();
-            long age();
+            int age();
         protected:
             int64 timeout_ticks;
             int64 last_updated;
-            long lifetime;
+            int lifetime;
             int x, y, width, height;
             float calc_angle, angle_offset;
     };
@@ -184,7 +184,7 @@ namespace targetfinder {
             Navigator(int width, int height, float rotation_deadzone=ROTATION_DEADZONE,
                       float horizontal_deadzone=AXES_DEADZONE, float vertical_deadzone=AXES_DEADZONE,
                       float update_rate=UPDATE_RATE);
-            bool update(cv::Point target, float angle, float distance);
+            bool update(cv::Point target, float angle, float distance, int age);
             void update();
             float horizontal();
             float vertical();
