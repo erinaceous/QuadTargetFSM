@@ -4,7 +4,7 @@
 
 #include <queue>
 #include <boost/foreach.hpp>
-#include "../include/ConfigMerger.hpp"
+#include "include/ConfigMerger.hpp"
 
 /*
  * Merge two property trees.

@@ -13,14 +13,14 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
-#include "../include/Target.hpp"
-#include "../include/PersistentTarget.hpp"
-#include "../include/CameraModel.hpp"
-#include "../include/TargetFinder.hpp"
-#include "../include/SocketCamera.hpp"
-#include "../include/ImageCycler.hpp"
-#include "../include/Navigator.hpp"
-#include "../include/ConfigMerger.hpp"
+#include "include/Target.hpp"
+#include "include/PersistentTarget.hpp"
+#include "include/CameraModel.hpp"
+#include "include/TargetFinder.hpp"
+#include "include/SocketCamera.hpp"
+#include "include/ImageCycler.hpp"
+#include "include/Navigator.hpp"
+#include "include/ConfigMerger.hpp"
 
 using namespace std;
 using namespace cv;
@@ -294,17 +294,14 @@ int main(int argc, char* argv[]) {
         }
 
         /*
-         * Let the persistent target age
-         */
-        target->tick();
-
-        /*
          * If we have found a good target, we update the existing target with
          * the x,y,width,height and angle of the new target.
          * target_influence adjusts how "big" the update is.
          */
         if(best_target && best_similarity <= 1000.0) {
             target->update(best_target, current, target_influence);
+        } else {
+            target->tick();
         }
 
         // Calculate number of 'ticks' per second
@@ -358,7 +355,9 @@ int main(int argc, char* argv[]) {
             /*
              * If the target is dead, we ask the Navigator to return to center.
              */
-            std::cout << "null";
+            if(output_demands) {
+                std::cout << "null";
+            }
             nv->update(delta);
         }
 

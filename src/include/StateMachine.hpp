@@ -5,7 +5,7 @@
 #ifndef QUADTARGETFSM_STATEMACHINE_HPP
 #define QUADTARGETFSM_STATEMACHINE_HPP
 
-#include "../include/Marker.hpp"
+#include "Marker.hpp"
 
 namespace targetfinder {
 

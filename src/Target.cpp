@@ -5,9 +5,9 @@
 #include <memory>
 #include <math.h>
 #include <opencv2/opencv.hpp>
-#include "Utils.h"
-#include "../include/Marker.hpp"
-#include "../include/Target.hpp"
+#include "include/Utils.h"
+#include "include/Marker.hpp"
+#include "include/Target.hpp"
 
 using namespace targetfinder;
 

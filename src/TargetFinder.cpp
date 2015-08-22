@@ -4,8 +4,8 @@
 
 #include <math.h>
 #include <iostream>
-#include "../include/TargetFinder.hpp"
-#include "../include/Marker.hpp"
+#include "include/TargetFinder.hpp"
+#include "include/Marker.hpp"
 
 using namespace targetfinder;
 
@@ -74,10 +74,18 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
     StateMachine *sm[this->num_bins];
     unsigned int bin_vals[this->num_bins];
     for(int b=0; b<this->num_bins; b++) {
-        sm[b] = new StateMachine(input.cols);
+        sm[b] = new StateMachine(
+                input.cols,
+                this->tolerance,
+                this->min_length
+        );
         bin_vals[b] = (int) ((255 / this->num_bins) * (b + 0.5));
     }
-    StateMachine sm2(input.rows);       // Vertically-scanning state machine
+    StateMachine sm2(
+            input.rows,
+            this->tolerance,
+            this->min_length
+    );       // Vertically-scanning state machine
 
     double aspect = TargetFinder::aspect(input.cols, input.rows);
     double alpha1 = (1.0 / (((double) input.cols) / 8.0));
@@ -146,6 +154,8 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
                         }
                         last_center_x = center.x;
                         int h2 = (int) ((aspect * (m->xlength() * 2.0)));
+                        int start_x = center.x - this->row_step;
+                        int end_x = center.x + this->row_step;
                         int start_y = center.y - h2;
                         int end_y = center.y + h2;
                         if (start_y < 0) {
@@ -160,22 +170,40 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
                         if (end_y >= input.rows) {
                             end_y = input.rows - 1;
                         }
+                        if(start_x < 0) {
+                            start_x = 0;
+                        }
+                        if(start_x >= input.cols) {
+                            start_x = input.cols - 1;
+                        }
+                        if(end_x < 0) {
+                            end_x = 0;
+                        }
+                        if(end_x >= input.cols) {
+                            end_x = input.cols - 1;
+                        }
                         Marker *m2;
                         p = input.ptr(start_y);
-                        sm2.reset(center.x, (p[(center.x * 3)] > thresh_val));
-                        int x_i = 0;
-                        for (int y2 = start_y; y2 < end_y; y2++) {
-                            p = input.ptr(y2);
-                            m2 = sm2.step(y2, center.x, (p[(center.x * 3)] > thresh_val));
-                            if (show_state && output.rows > 0 && sm2.state > 0) {
-                                cv::Vec3b color = sm2.state_colour();
-                                o = output.ptr(y2);
-                                for (int c = 0; c < 3; c++) {
-                                    o[(center.x * 3) + c] = color[c];
+                        for(int x2 = start_x; x2 <= end_x; x2 += this->row_step) {
+                            sm2.reset(x2, (p[(x2 * 3)] > thresh_val));
+                            for (int y2 = start_y; y2 < end_y; y2++) {
+                                p = input.ptr(y2);
+                                m2 = sm2.step(y2, x2,
+                                              (p[(x2 * 3)] > thresh_val));
+                                if (show_state && output.rows > 0 &&
+                                                  sm2.state > 0) {
+                                    cv::Vec3b color = sm2.state_colour();
+                                    o = output.ptr(y2);
+                                    for (int c = 0; c < 3; c++) {
+                                        o[(x2 * 3) + c] = color[c];
+                                    }
+                                }
+                                if (m2) {
+                                    m->expand(*m2, true);
+                                    break;
                                 }
                             }
-                            if (m2) {
-                                m->expand(*m2, true);
+                            if(m2) {
                                 break;
                             }
                         }

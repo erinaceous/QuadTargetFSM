@@ -4,9 +4,9 @@
 
 #include <math.h>
 #include <opencv2/opencv.hpp>
-#include "Utils.h"
-#include "../include/Target.hpp"
-#include "../include/PersistentTarget.hpp"
+#include "include/Utils.h"
+#include "include/Target.hpp"
+#include "include/PersistentTarget.hpp"
 
 using namespace targetfinder;
 

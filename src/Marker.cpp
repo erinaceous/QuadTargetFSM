@@ -3,8 +3,8 @@
 //
 
 #include <memory>
-#include "Utils.h"
-#include "../include/Marker.hpp"
+#include "include/Utils.h"
+#include "include/Marker.hpp"
 
 using namespace targetfinder;
 

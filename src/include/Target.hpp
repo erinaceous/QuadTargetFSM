@@ -7,7 +7,7 @@
 
 #include <memory>
 #include <opencv2/opencv.hpp>
-#include "../include/Marker.hpp"
+#include "Marker.hpp"
 
 namespace targetfinder {
 

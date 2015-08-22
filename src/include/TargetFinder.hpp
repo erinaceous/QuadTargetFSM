@@ -7,9 +7,9 @@
 
 #include <memory>
 #include <opencv2/core/core.hpp>
-#include "../include/StateMachine.hpp"
-#include "../include/Target.hpp"
-#include "../include/PersistentTarget.hpp"
+#include "StateMachine.hpp"
+#include "Target.hpp"
+#include "PersistentTarget.hpp"
 
 namespace targetfinder {
 

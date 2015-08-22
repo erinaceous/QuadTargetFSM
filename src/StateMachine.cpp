@@ -2,8 +2,8 @@
 // Created by owain on 02/08/15.
 //
 
-#include "../include/Marker.hpp"
-#include "../include/StateMachine.hpp"
+#include "include/Marker.hpp"
+#include "include/StateMachine.hpp"
 
 using namespace targetfinder;
 
