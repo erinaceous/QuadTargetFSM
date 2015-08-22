@@ -16,7 +16,7 @@ if(DOXYGEN_FOUND)
 configure_file(Doxyfile.in
 ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc)
-add_custom_target(doc ALL
+add_custom_target(doc
 ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 COMMAND sed -i s/^\\s*refman\\.idx// ${CMAKE_CURRENT_BINARY_DIR}/doc/latex/Makefile
 COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}/doc/latex
