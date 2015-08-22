@@ -6,11 +6,6 @@
 #include <boost/foreach.hpp>
 #include "include/ConfigMerger.hpp"
 
-/*
- * Merge two property trees.
- * Code snippet lifted from http://paste.tbee-clan.de/TX2Vm
- * Original author unknown!
- */
 boost::property_tree::ptree ConfigMerger::mergePropertyTrees(
         const boost::property_tree::ptree &rptFirst,
         const boost::property_tree::ptree &rptSecond) {
