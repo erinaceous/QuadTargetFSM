@@ -2,6 +2,7 @@
 // Created by owain on 06/08/15.
 //
 
+#include <math.h>
 #include <opencv2/opencv.hpp>
 #include "Utils.c"
 #include "TargetFinder.h"
@@ -17,7 +18,7 @@ Navigator::PID::PID(double Kp, double Ki, double Kd) {
 }
 
 void Navigator::PID::reset(double val) {
-    this->integral = val * (1.0 / this->Ki);
+    this->integral = 0.0;
     this->previous_error = 0.0;
 }
 
@@ -75,27 +76,23 @@ bool Navigator::update(cv::Point target, double angle, double distance, int age,
     } else {
         this->angle = 0;
     }*/
-    this->x = this->roll_pid->step(target_x, 0.5, deltatime);
-    this->y = this->pitch_pid->step(target_y, 0.5, deltatime);
-    this->angle = this->yaw_pid->step(angle, 0.0, deltatime);
-    if(this->x < 0) this->x = 0;
-    if(this->x > 1) this->x = 1;
-    if(this->y < 0) this->y = 0;
-    if(this->y > 1) this->y = 1;
+    this->x = this->roll_pid->step(target_x, 0.5, deltatime) + 0.5;
+    this->y = this->pitch_pid->step(target_y, 0.5, deltatime) + 0.5;
+    this->angle = this->yaw_pid->step(M_PI_2, angle, deltatime) + M_PI_2;
 }
 
 void Navigator::update(double deltatime) {
-    this->x += (0.5 - this->x) * this->alpha;
-    this->y += (0.5 - this->y) * this->alpha;
+    // this->x = 0.5;
+    // this->y = 0.5;
+    this->angle = M_PI_2;
+    this->x += (0.5 - this->x) * (deltatime * this->alpha);
+    this->y += (0.5 - this->y) * (deltatime * this->alpha);
     this->pitch_pid->reset(0.5);
     this->roll_pid->reset(0.5);
-    // this->x = this->roll_pid->step(0.5, this->x, deltatime);
-    // this->y = this->pitch_pid->step(0.5, this->y, deltatime);
-    // this->angle = this->yaw_pid->step(0.0, this->angle, deltatime);
-    if(this->x < 0) this->x = 0;
-    if(this->x > 1) this->x = 1;
-    if(this->y < 0) this->y = 0;
-    if(this->y > 1) this->y = 1;
+    // this->roll_pid->reset(0.5);
+    // this->pitch_pid->reset(0.5);
+    this->roll_pid->step(0.5, this->x, deltatime);
+    this->pitch_pid->step(0.5, this->y, deltatime);
 }
 
 double Navigator::horizontal() {
@@ -148,6 +145,7 @@ void Navigator::setPIDs(double pitch_P, double pitch_I, double pitch_D,
 
 std::string Navigator::str() {
     std::stringstream ss;
-    ss << "\"roll\": " << this->x << ", \"pitch\": " << this->y << ", \"yaw\": " << this->angle;
+    ss << "\"roll\": " << this->x << ", \"pitch\": " << this->y
+       << ", \"yaw\": " << this->angle << ", \"throt\": " << this->throttle;
     return ss.str();
 }

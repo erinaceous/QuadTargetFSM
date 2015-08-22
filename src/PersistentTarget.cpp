@@ -2,11 +2,53 @@
 // Created by owain on 03/08/15.
 //
 
+#include <math.h>
 #include <opencv2/opencv.hpp>
 #include "Utils.c"
 #include "TargetFinder.h"
+#include "../../../../../../../../usr/include/opencv2/core/core.hpp"
 
 using namespace targetfinder;
+
+void PersistentTarget::tick() {
+    this->lifetime++;
+}
+
+double PersistentTarget::similarity(Target *other) {
+    /**
+     * Calculate the n-dimensional euclidean distance between this
+     * target and another.
+     * Looks at center position, target dimensions and angle.
+     */
+    if(this->lifetime == 0 || !this->calc_alive) {
+        return -1.0;
+    }
+    cv::Rect other_rect = other->rect();
+    return sqrt(
+            pow((this->x - other_rect.x), 2)
+            + pow((this->y - other_rect.y), 2)
+            + pow((this->width - other_rect.width), 2)
+            + pow((this->height - other_rect.height), 2)
+            + pow((this->angle() - other->angle()), 2)
+    );
+}
+
+double PersistentTarget::distance(Target *other) {
+    /**
+     * Calculate just the x,y distance between this target's center point and
+     * another.
+     */
+    cv::Point other_center = other->center();
+    cv::Point this_center = this->center();
+    return sqrt(
+            pow(this_center.x - other_center.x, 2)
+            + pow(this_center.y - other_center.y, 2)
+    );
+}
+
+double PersistentTarget::velocity() {
+    return this->calc_velocity;
+}
 
 void PersistentTarget::update(Target *new_target, int64 timestamp, double influence) {
     cv::Rect other_rect = new_target->rect();
@@ -17,6 +59,7 @@ void PersistentTarget::update(Target *new_target, int64 timestamp, double influe
         this->width = other_rect.width;
         this->height = other_rect.height;
         this->calc_angle = other_angle;
+        this->calc_velocity = 0.0;
         this->lifetime = 0;
     } else {
         this->x -= (this->x - other_rect.x) * influence;
@@ -24,13 +67,15 @@ void PersistentTarget::update(Target *new_target, int64 timestamp, double influe
         this->width -= (this->width - other_rect.width) * influence;
         this->height -= (this->height - other_rect.height) * influence;
         this->calc_angle -= (this->calc_angle - other_angle) * influence;
+        this->calc_velocity = this->distance(new_target);
     }
     this->last_updated = timestamp;
     this->lifetime += 1;
 }
 
 bool PersistentTarget::alive(int64 timestamp) {
-    return (this->last_updated + this->timeout_ticks) >= timestamp;
+    this->calc_alive = (this->last_updated + this->timeout_ticks) >= timestamp;
+    return this->calc_alive;
 }
 
 double PersistentTarget::angle() {

@@ -14,5 +14,5 @@ set(SOURCE_FILES
     src/SocketCamera.h src/SocketCamera.cpp
     src/main.cpp
 )
-add_executable(QuadTarget ${SOURCE_FILES} )
+add_executable(QuadTarget ${SOURCE_FILES} src/ImageCycler.cpp src/ImageCycler.h)
 target_link_libraries( QuadTarget ${OpenCV_LIBS} )

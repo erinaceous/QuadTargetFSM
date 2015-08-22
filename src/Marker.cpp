@@ -94,6 +94,7 @@ void Marker::expand(Marker other, bool rotate) {
     if(o_end_y > this->end_y) {
         this->end_y = o_end_y;
     }
+    this->expanded_count++;
 }
 
 cv::Rect Marker::rect() {
@@ -101,4 +102,11 @@ cv::Rect Marker::rect() {
           this->start_x, this->start_y,
           this->xlength(), this->ylength()
     );
+}
+
+std::string Marker::str() {
+    std::stringstream ss;
+    cv::Rect rect = this->rect();
+    ss << rect.x << ", " << rect.y << ", " << rect.width << ", " << rect.height;
+    return ss.str();
 }

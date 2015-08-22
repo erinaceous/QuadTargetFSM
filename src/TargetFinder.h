@@ -31,11 +31,13 @@ namespace targetfinder {
             static double angle(Marker one, Marker two);
             cv::Rect rect();
             std::shared_ptr<Marker> cloned_shared_ptr();
+            std::string str();
         protected:
             int start_x, end_x, start_y, end_y, black_count, white_count, center_count;
             int calc_xlength, calc_ylength;
             cv::Point center_point;
             bool updated = true, calc_valid = true;
+            int expanded_count = 0;
     };
 
     class Target {
@@ -57,6 +59,7 @@ namespace targetfinder {
             cv::Point center();
             bool isClose(std::shared_ptr<Marker> m);
             std::string str();
+            std::shared_ptr<Marker> getCorner();
 
             bool calc_valid;
         protected:
@@ -78,7 +81,7 @@ namespace targetfinder {
         public:
             void update(Target *new_target, int64 timestamp, double influence);
             bool alive(int64 timestamp);
-            double similarity(Target other);
+            double similarity(Target *other);
             double angle();
             cv::Rect rect();
             cv::Point center();
@@ -86,12 +89,17 @@ namespace targetfinder {
             void setAngleOffset(double angle);
             std::string str();
             int age();
+            double distance(Target *other);
+            double velocity();
+            void tick();
         protected:
             int64 timeout_ticks;
             int64 last_updated;
             int lifetime;
             int x, y, width, height;
             double calc_angle, angle_offset;
+            bool calc_alive = true;
+            double calc_velocity = 0.0;
     };
 
     class StateMachine {
@@ -102,18 +110,18 @@ namespace targetfinder {
             static constexpr int NUM_STATES = 7;
 
             StateMachine(int input_length=0, double tolerance=TOLERANCE, int min_pixels=MIN_LENGTH);
-            Marker* step(int x, int y, bool value);
-            void reset(int y, bool value=false);
+            Marker* step(int x, int y, bool value1, bool value2=true);
+            void reset(int y, bool value1=false, bool value2=true);
             cv::Vec3b state_colour();
             void setInputLength(int input_length);
             int state;
 
         protected:
             bool in_bounds(int count, int scale=1);
-            bool valid_transition(int x, bool value);
-            void transition(int x, int y, bool value);
+            bool valid_transition(int x, bool value1, bool value2=true);
+            void transition(int x, int y, bool value1, bool value2=true);
 
-            bool last_value;
+            bool last_value1, last_value2;
             int first_x, last_x, y, input_length, min_pixels, max_pixels;
             int min_bound, max_bound;
             int pixel_counts[NUM_STATES];
@@ -151,8 +159,12 @@ namespace targetfinder {
             static constexpr int THRESH_BINS = 1;
             static constexpr double MARKER_ASPECT_TOLERANCE = 0.9;
             static constexpr int ROW_STEP = 1;
+            static constexpr double VARIANCE_THRESHOLD = 0.33;
 
-            std::vector<Target> doTargetRecognition(cv::Mat input, cv::Mat output, bool show_state=false);
+            std::vector<Target> doTargetRecognition(cv::Mat input, cv::Mat output,
+                                                    bool show_state=false,
+                                                    bool show_markers=false,
+                                                    std::string *marker_info=nullptr);
             std::vector<PersistentTarget> getPersistentTargets();
             void setRowStep(int row_step);
             void setMinLength(int min_length);
@@ -162,6 +174,9 @@ namespace targetfinder {
             void setMarkerDistances(double min_distance, double max_distance);
             void setMarkerSizeTolerance(double tolerance);
             void setAngleOffset(double angle);
+            void setVarianceThreshold(double variance);
+            void setAlpha(double alpha);
+            Marker* getCorner();
 
         protected:
             std::vector<PersistentTarget> finalTargets;
@@ -174,6 +189,8 @@ namespace targetfinder {
             double max_marker_distance = Target::MAX_MARKER_DISTANCE;
             double marker_size_tolerance = Target::MARKER_SIZE_TOLERANCE;
             double angle_offset = 0.0;
+            double alpha = 0.33;
+            double variance_threshold = VARIANCE_THRESHOLD;
 
         private:
             static double aspect(int width, int height);
@@ -183,7 +200,7 @@ namespace targetfinder {
         public:
             static constexpr double ROTATION_DEADZONE = 30.0;
             static constexpr double AXES_DEADZONE = 0.1;
-            static constexpr double UPDATE_RATE = 0.1;
+            static constexpr double UPDATE_RATE = 1.0;
             Navigator(int width, int height, double rotation_deadzone=ROTATION_DEADZONE,
                       double horizontal_deadzone=AXES_DEADZONE, double vertical_deadzone=AXES_DEADZONE,
                       double update_rate=UPDATE_RATE);
@@ -215,8 +232,10 @@ namespace targetfinder {
         protected:
             int width, height;
             cv::Point image_center;
-            double rotation_deadzone, horizontal_deadzone, vertical_deadzone, angle, distance, alpha, x, y;
+            double rotation_deadzone, horizontal_deadzone, vertical_deadzone,
+                    angle, distance, alpha, x, y, throttle;
             PID *pitch_pid, *roll_pid, *throttle_pid, *yaw_pid;
+            bool should_flip = false;
     };
 
 }

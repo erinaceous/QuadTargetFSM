@@ -26,8 +26,9 @@ bool StateMachine::in_bounds(int count, int scale) {
 #define IN_BOUNDS(x) this->in_bounds(this->pixel_counts[x])
 #define IN_BOUNDS3(x) this->in_bounds(this->pixel_counts[x], 3)
 
-void StateMachine::reset(int y, bool value) {
-    this->last_value = value;
+void StateMachine::reset(int y, bool value1, bool value2) {
+    this->last_value1 = value1;
+    this->last_value2 = value2;
     this->y = y;
     this->first_x = 0;
     this->last_x = 0;
@@ -39,38 +40,40 @@ void StateMachine::reset(int y, bool value) {
     this->max_bound = 0;
 }
 
-bool StateMachine::valid_transition(int x, bool value) {
+bool StateMachine::valid_transition(int x, bool value1, bool value2) {
     switch(this->state) {
         case 0:
-            return (!value && x != 0);
+            return (!value1 && x != 0 && this->last_value2);
         case 1:
             this->min_bound = (int) (((double)this->pixel_counts[1] * this->tolerance));
             this->max_bound = (int) (((double)this->pixel_counts[1] / this->tolerance));
-            return (value && this->pixel_counts[1] >= this->min_pixels
+            return (value1 && this->pixel_counts[1] >= this->min_pixels
                     && this->pixel_counts[1] <= this->max_pixels);
         case 2:
         case 4:
-            return (!value && IN_BOUNDS(this->state));
+            return (!value1 && IN_BOUNDS(this->state));
         case 3:
-            return (value && IN_BOUNDS3(3));
+            return (value1 && IN_BOUNDS3(3));
         case 5:
-            return ((value && IN_BOUNDS(5)) || x >= this->input_length - 1);
+            return ((value1 && IN_BOUNDS(5)) || x >= this->input_length - 1);
         default:
             return false;
     }
 }
 
-void StateMachine::transition(int x, int y, bool value) {
-    if(this->valid_transition(x, value)) {
+void StateMachine::transition(int x, int y, bool value1, bool value2) {
+    if(this->valid_transition(x, value1, value2)) {
         this->state = (this->state + 1) % StateMachine::NUM_STATES;
     } else {
-        this->reset(y, value);
+        this->reset(y, value1, value2);
     }
 }
 
-Marker* StateMachine::step(int x, int y, bool value) {
+Marker* StateMachine::step(int x, int y, bool value1, bool value2) {
     Marker *m = nullptr;
-    if(value != this->last_value || this->state == 6) {
+    if(value1 != this->last_value1
+       || (this->state == 0 && (value1 != this->last_value1 && value2 != this->last_value2))
+       || this->state == 6) {
         if(this->state == 0) {
             this->first_x = x;
             this->last_x = x;
@@ -85,12 +88,12 @@ Marker* StateMachine::step(int x, int y, bool value) {
                     this->pixel_counts[3]
             );
         }
-        this->transition(x, y, value);
+        this->transition(x, y, value1, value2);
     }
     this->pixel_counts[this->state]++;
     if(this->state == 1) {
         if(this->pixel_counts[1] > this->max_pixels) {
-            this->reset(y, value);
+            this->reset(y, value1);
         }
     } else if(this->state > 1) {
         int max_bound = this->max_bound;
@@ -98,11 +101,12 @@ Marker* StateMachine::step(int x, int y, bool value) {
             max_bound *= 3;
         }
         if(this->pixel_counts[this->state] > max_bound || this->pixel_counts[this->state] > this->max_pixels) {
-            this->reset(y, value);
+            this->reset(y, value1);
         }
     }
     this->y = y;
-    this->last_value = value;
+    this->last_value1 = value1;
+    this->last_value2 = value2;
     return m;
 }
 

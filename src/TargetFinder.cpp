@@ -2,6 +2,7 @@
 // Created by owain on 02/08/15.
 //
 
+#include <math.h>
 #include <iostream>
 #include "TargetFinder.h"
 #include <opencv2/opencv.hpp>
@@ -41,6 +42,14 @@ void TargetFinder::setAngleOffset(double angle) {
     this->angle_offset = angle;
 }
 
+void TargetFinder::setVarianceThreshold(double variance) {
+    this->variance_threshold = variance;
+}
+
+void TargetFinder::setAlpha(double alpha) {
+    this->alpha = alpha;
+}
+
 double TargetFinder::aspect(int width, int height) {
     if(height > width) {
         return ((double) height / (double) width);
@@ -52,12 +61,11 @@ std::vector<PersistentTarget> TargetFinder::getPersistentTargets() {
     return this->finalTargets;
 }
 
-std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat output, bool show_state) {
+std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat output,
+                                                      bool show_state,
+                                                      bool show_markers,
+                                                      std::string *marker_info) {
     std::vector<std::shared_ptr<Marker>> markers;
-    std::vector<cv::Mat> yuv;
-    /* cv::split(input, yuv);
-    cv::threshold(yuv[0], yuv[0], 255, 255, cv::THRESH_OTSU);
-    cv::merge(yuv, input); */
 
     StateMachine *sm[this->num_bins];
     unsigned int bin_vals[this->num_bins];
@@ -68,24 +76,54 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
     StateMachine sm2(input.rows);       // Vertically-scanning state machine
 
     double aspect = TargetFinder::aspect(input.cols, input.rows);
+    double alpha1 = (1.0 / (((double) input.cols) / 8.0));
+    double alpha2 = 8.0;
+    double local_value = 0.0, delta = 0.0;
+    double global_delta = 0.0, local_delta = 0.0;
+    double last_value = 0;
     int last_center_x = 0;
+    Marker *m = nullptr;
+    bool lacking_texture = false;
 
     for(int y=0; y<input.rows; y += this->row_step) {
         uchar *p = input.ptr(y);
         uchar *o = output.ptr(y);
-        for(int b=0; b<this->num_bins; b++) {
-            sm[b]->reset(y, (p[0] > bin_vals[b]));
-            for (int x = 0; x < input.cols; x++) {
-                Marker *m = sm[b]->step(x, y, (p[3 * x] > bin_vals[b]));
+
+        global_delta = 0.0;
+        local_delta = 0.0;
+
+        for(int x=0; x<input.cols; x++) {
+            local_value = (p[(3 * x)] + p[(3 * x) + 1] + p[(3 * x) + 2]) / 3.0;
+            delta = fabs(local_value - last_value);
+            global_delta = (alpha1 * delta) + ((1.0 - alpha1) * global_delta);
+            local_delta = (local_delta / alpha2) + delta;
+            last_value = local_value;
+            lacking_texture = local_delta <= MIN(1.0, global_delta);
+
+            for(int b=0; b<this->num_bins; b++) {
+                unsigned int thresh_val = bin_vals[b];
+                bool sm_value = (p[(3 * x)] >= thresh_val);
+
+                if(x == 0) {
+                    sm[b]->reset(y, sm_value, lacking_texture);
+                } else {
+                    m = sm[b]->step(x, y, sm_value, lacking_texture);
+                }
+
                 if (show_state && output.rows > 0 && sm[b]->state > 0) {
                     cv::Vec3b color = sm[b]->state_colour();
-                    for (int c = 0; c < 3; c++) {
+                    for (int c=0; c<3; c++) {
                         o[(3 * x) + c] = color[c];
                     }
                 }
+
+                /* for(int c=0; c<3; c++) {
+                    o[(3 * x) + c] = p[(3 * x) + 2];
+                } */
+
                 if (m) {
                     bool expanded = false;
-                    for (int i = 0; i < markers.size(); i++) {
+                    for (int i=0; i<markers.size(); i++) {
                         if (markers[i]->contains(*m)) {
                             markers[i]->expand(*m);
                             delete m;
@@ -94,13 +132,13 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
                         }
                     }
                     if (!expanded) {
+                        cv::Rect rect = m->rect();
                         cv::Point center = m->center();
                         if (center.x == last_center_x) {
                             continue;
                         }
                         last_center_x = center.x;
-                        int w2 = (int) (((m->xlength() / 2.0)) / this->tolerance);
-                        int h2 = (int) ((aspect * (m->xlength() / 2.0)) / this->tolerance);
+                        int h2 = (int) ((aspect * (m->xlength() * 2.0)));
                         int start_y = center.y - h2;
                         int end_y = center.y + h2;
                         if (start_y < 0) {
@@ -117,10 +155,11 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
                         }
                         Marker *m2;
                         p = input.ptr(start_y);
-                        sm2.reset(center.x, (p[center.x * 3] > bin_vals[b]));
+                        sm2.reset(center.x, (p[(center.x * 3)] > thresh_val));
+                        int x_i = 0;
                         for (int y2 = start_y; y2 < end_y; y2++) {
                             p = input.ptr(y2);
-                            m2 = sm2.step(y2, center.x, (p[center.x * 3] > bin_vals[b]));
+                            m2 = sm2.step(y2, center.x, (p[(center.x * 3)] > thresh_val));
                             if (show_state && output.rows > 0 && sm2.state > 0) {
                                 cv::Vec3b color = sm2.state_colour();
                                 o = output.ptr(y2);
@@ -138,9 +177,12 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
                             double marker_aspect = TargetFinder::aspect(m->xlength(), m->ylength());
                             double min_marker_aspect = this->marker_aspect_tolerance;
                             double max_marker_aspect = 1.0 + this->marker_aspect_tolerance;
-                            if (m->ylength() >= min_pixels && m->xlength() >= min_pixels
-                                && marker_aspect >= min_marker_aspect && marker_aspect <= max_marker_aspect) {
-                                markers.push_back(std::shared_ptr<Marker>(m));
+                            if (m->ylength() >= min_pixels
+                                && m->xlength() >= min_pixels
+                                && marker_aspect >= min_marker_aspect
+                                && marker_aspect <= max_marker_aspect) {
+                                markers.push_back(
+                                        std::shared_ptr<Marker>(m));
                             }
                             delete m2;
                         }
@@ -150,12 +192,20 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
                 }
             }
         }
+
     }
 
     std::vector<Target> targets;
 
     for(int i=0; i<markers.size(); i++) {
-        cv::rectangle(output, markers[i]->rect(), cv::Scalar(0, 0, 0), 1);
+        if(&output && show_markers) {
+            cv::rectangle(output, markers[i]->rect(), cv::Scalar(0, 0, 0), 1);
+        }
+        if(marker_info != nullptr && markers[i] != nullptr) {
+            long rpos = marker_info->rfind('/') + 1;
+            std::string marker_base = marker_info->substr(rpos, marker_info->length());
+            std::cout << marker_base << ", " << markers[i]->str() << std::endl;
+        }
         bool found_target = false;
         for(int t=0; t<targets.size(); t++) {
             if(targets[t].isClose(markers[i])) {

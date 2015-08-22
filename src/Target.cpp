@@ -29,7 +29,12 @@ bool Target::addMarker(std::shared_ptr<Marker> m) {
 }
 
 bool Target::valid() {
-    return this->marker_count == 3;
+    if(this->marker_count != 3) {
+        return false;
+    }
+    cv::Rect rect = this->rect();
+    double aspect = _aspect(rect.width, rect.height);
+    return aspect > 0.25 && aspect <= 4.0;
 }
 
 cv::Rect Target::rect() {
@@ -88,37 +93,38 @@ void Target::calcGeometry() {
     double a1 = abs(a10 - a12);
     double a2 = abs(a20 - a21);
 
-    if(a0 > M_PI_2) a0 -= M_PI_2;
-    if(a1 > M_PI_2) a1 -= M_PI_2;
-    if(a2 > M_PI_2) a2 -= M_PI_2;
+    if(a0 > M_PI) a0 = M_PI - a0;
+    if(a1 > M_PI) a1 = M_PI - a0;
+    if(a2 > M_PI) a2 = M_PI - a0;
 
-    cv::Point center_one, center_two;
+    // cv::Point center_one, center_two;
 
     if(a0 >= a1 && a0 >= a2) {
         this->corner = markers[0];
         this->corner_angle = a0;
-        center_one = markers[1]->center();
-        center_two = markers[2]->center();
+        // center_one = markers[1]->center();
+        // center_two = markers[2]->center();
     }
 
     if(a1 >= a0 && a1 >= a2) {
         this->corner = markers[1];
         this->corner_angle = a1;
-        center_one = markers[0]->center();
-        center_two = markers[2]->center();
+        // center_one = markers[0]->center();
+        // center_two = markers[2]->center();
     }
 
     if(a2 >= a0 && a2 >= a1) {
         this->corner = markers[2];
         this->corner_angle = a2;
-        center_one = markers[0]->center();
-        center_two = markers[1]->center();
+        // center_one = markers[0]->center();
+        // center_two = markers[1]->center();
     }
 
-    cv::Point new_center = cv::Point(
+    /* cv::Point new_center = cv::Point(
             (center_one.x + center_two.x) / 2,
             (center_one.y + center_two.y) / 2
-    );
+    ); */
+    cv::Point new_center = this->center();
     cv::Point corner_center = this->corner->center();
     double dx = corner_center.x - new_center.x;
     double dy = corner_center.y - new_center.y;
@@ -150,6 +156,10 @@ bool Target::isClose(std::shared_ptr<Marker> m) {
         }
     }
     return false;
+}
+
+std::shared_ptr<Marker> Target::getCorner() {
+    return this->corner;
 }
 
 std::string Target::str() {
