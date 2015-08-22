@@ -1,4 +1,7 @@
 #!/bin/bash
+# Compile for Raspberry Pi 2! Tries to force GCC to compile with optimizations
+# for the ARM8 processor of the Pi2 -- enabling the VFP and NEON floating point
+# units.
 
 cd /root/quadtargetfsm
 git pull
