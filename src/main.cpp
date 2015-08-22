@@ -20,6 +20,7 @@
 #include "../include/SocketCamera.hpp"
 #include "../include/ImageCycler.hpp"
 #include "../include/Navigator.hpp"
+#include "../include/ConfigMerger.hpp"
 
 using namespace std;
 using namespace cv;
@@ -47,12 +48,7 @@ int main(int argc, char* argv[]) {
             }
             std::cerr << "Reading config from " << config_strs[i] << std::endl;
             boost::property_tree::ini_parser::read_ini(config_strs[i].c_str(), pt_updates);
-            for(auto &pt_update : pt_updates) {
-                boost::property_tree::ptree pt_child = pt_updates.get_child(pt_update.first);
-                for(auto &pt_children : pt_child) {
-                    pt.get_child(pt_update.first).put_child(pt_children.first, pt_children.second);
-                }
-            }
+            pt = ConfigMerger::mergePropertyTrees(pt, pt_updates);
         }
     }
     debug = pt.get<bool>("gui.debug");
