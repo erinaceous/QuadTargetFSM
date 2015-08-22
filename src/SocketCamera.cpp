@@ -3,21 +3,11 @@
 //
 
 #include <opencv2/opencv.hpp>
-#include <sys/stat.h>
-#include <sys/file.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
 #include <fstream>
-#include <fcntl.h>
 #include <arpa/inet.h>
-#include "SocketCamera.h"
-
-/** Read file into string. */
-/* http://stackoverflow.com/a/18816712 */
-inline std::string slurp (const std::string& path) {
-    std::ostringstream buf; std::ifstream input (path.c_str()); buf << input.rdbuf(); return buf.str();
-}
+#include "../include/SocketCamera.hpp"
 
 SocketCamera::SocketCamera(std::string addr) {
     long port_ptr = addr.rfind(':');

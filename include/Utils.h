@@ -2,6 +2,9 @@
 // Created by owain on 06/08/15.
 //
 
+#ifndef QUADTARGETFSM_UTILS_H
+#define QUADTARGETFSM_UTILS_H
+
 #include <math.h>
 
 #define MIN(a, b) ((a < b) ? a : b)
@@ -23,3 +26,5 @@ static double _aspect(double a1, double a2) {
     double b = MIN(a1, a2);
     return b / a;
 }
+
+#endif

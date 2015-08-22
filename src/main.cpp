@@ -8,13 +8,18 @@
  */
 
 #include <iostream>
-#include <regex>
 #include <opencv2/opencv.hpp>
-#include "TargetFinder.h"
-#include "SocketCamera.h"
-#include "ImageCycler.h"
+#include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include "../include/Target.hpp"
+#include "../include/PersistentTarget.hpp"
+#include "../include/CameraModel.hpp"
+#include "../include/TargetFinder.hpp"
+#include "../include/SocketCamera.hpp"
+#include "../include/ImageCycler.hpp"
+#include "../include/Navigator.hpp"
 
 using namespace std;
 using namespace cv;
@@ -24,15 +29,31 @@ static bool debug = false;
 
 int main(int argc, char* argv[]) {
     /*
-     * Parse a config.ini file, load its contents into a bunch of local
+     * Parse config files, load their contents into a bunch of local
      * variables.
+     * The config files loaded later override values in earlier files.
      */
     boost::property_tree::ptree pt;
-    char* config_path = getenv("QUADTARGET_CONFIG");
-    if(config_path == NULL) {
+    boost::property_tree::ptree pt_updates;
+    string config_paths = getenv("QUADTARGET_CONFIGS");
+    if(config_paths.empty()) {
         boost::property_tree::ini_parser::read_ini("config.ini", pt);
     } else {
-        boost::property_tree::ini_parser::read_ini(config_path, pt);
+        std::vector<std::string> config_strs;
+        boost::split(config_strs, config_paths, boost::is_any_of(" ,;:"));
+        for(int i=0; i<config_strs.size(); i++) {
+            if(config_strs[i].empty()) {
+                continue;
+            }
+            std::cerr << "Reading config from " << config_strs[i] << std::endl;
+            boost::property_tree::ini_parser::read_ini(config_strs[i].c_str(), pt_updates);
+            for(auto &pt_update : pt_updates) {
+                boost::property_tree::ptree pt_child = pt_updates.get_child(pt_update.first);
+                for(auto &pt_children : pt_child) {
+                    pt.get_child(pt_update.first).put_child(pt_children.first, pt_children.second);
+                }
+            }
+        }
     }
     debug = pt.get<bool>("gui.debug");
     bool headless = pt.get<bool>("gui.headless");
@@ -162,6 +183,7 @@ int main(int argc, char* argv[]) {
     tf->setAngleOffset(pt.get<double>("camera.angle_offset"));
     tf->setAlpha(pt.get<double>("parameters.alpha"));
     tf->setVarianceThreshold(pt.get<double>("parameters.variance"));
+    tf->shouldFilterTexture(pt.get<bool>("parameters.filter_texture"));
     bool convert_yuv = pt.get<bool>("camera.convert_yuv");
     bool flip_vertical = pt.get<bool>("camera.flip_vertical");
     bool flip_horizontal = pt.get<bool>("camera.flip_horizontal");

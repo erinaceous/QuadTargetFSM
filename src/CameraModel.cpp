@@ -2,7 +2,8 @@
 // Created by owain on 06/08/15.
 //
 
-#include "TargetFinder.h"
+#include "Utils.h"
+#include "../include/CameraModel.hpp"
 
 using namespace targetfinder;
 

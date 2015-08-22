@@ -2,23 +2,14 @@
 // Created by owain on 02/08/15.
 //
 
+#include <memory>
 #include <math.h>
 #include <opencv2/opencv.hpp>
-#include "TargetFinder.h"
-#include "Utils.c"
+#include "Utils.h"
+#include "../include/Marker.hpp"
+#include "../include/Target.hpp"
 
 using namespace targetfinder;
-
-/* Target::Target() {
-    this->marker_count = 0;
-    // this->markers = (Marker*) malloc(sizeof(Marker*) * 3);
-    this->markers = new Marker*[3];
-    // this->markers = new Marker[3];
-} */
-
-/* Target::~Target() {
-    free(this->markers);
-} */
 
 bool Target::addMarker(std::shared_ptr<Marker> m) {
     if(this->marker_count > 2) {

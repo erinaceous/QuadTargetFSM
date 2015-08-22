@@ -4,8 +4,7 @@
 
 #include <math.h>
 #include <opencv2/opencv.hpp>
-#include "Utils.c"
-#include "TargetFinder.h"
+#include "../include/Navigator.hpp"
 
 using namespace targetfinder;
 

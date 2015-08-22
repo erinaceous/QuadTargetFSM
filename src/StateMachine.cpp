@@ -2,7 +2,8 @@
 // Created by owain on 02/08/15.
 //
 
-#include "TargetFinder.h"
+#include "../include/Marker.hpp"
+#include "../include/StateMachine.hpp"
 
 using namespace targetfinder;
 

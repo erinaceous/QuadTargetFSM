@@ -6,13 +6,11 @@ find_package(Boost REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CURRENT_SOURCE_DIR src)
+include_directories(include)
 
-set(SOURCE_FILES
-    src/Utils.c src/Navigator.cpp src/CameraModel.cpp src/Marker.cpp
-    src/Target.cpp src/PersistentTarget.cpp src/StateMachine.cpp
-    src/TargetFinder.h src/TargetFinder.cpp
-    src/SocketCamera.h src/SocketCamera.cpp
-    src/main.cpp
-)
-add_executable(QuadTarget ${SOURCE_FILES} src/ImageCycler.cpp src/ImageCycler.h)
+file(GLOB INCLUDE_FILES include/*.h*)
+file(GLOB SRC_FILES src/*.c*)
+
+add_executable(QuadTarget ${INCLUDE_FILES} ${SRC_FILES} )
 target_link_libraries( QuadTarget ${OpenCV_LIBS} )
+

@@ -2,9 +2,9 @@
 // Created by owain on 02/08/15.
 //
 
-#include "Utils.c"
-#include "TargetFinder.h"
-#include <math.h>
+#include <memory>
+#include "Utils.h"
+#include "../include/Marker.hpp"
 
 using namespace targetfinder;
 

@@ -4,8 +4,8 @@
 
 #include <math.h>
 #include <iostream>
-#include "TargetFinder.h"
-#include <opencv2/opencv.hpp>
+#include "../include/TargetFinder.hpp"
+#include "../include/Marker.hpp"
 
 using namespace targetfinder;
 
@@ -50,6 +50,10 @@ void TargetFinder::setAlpha(double alpha) {
     this->alpha = alpha;
 }
 
+void TargetFinder::shouldFilterTexture(bool filter) {
+    this->filter_texture = filter;
+}
+
 double TargetFinder::aspect(int width, int height) {
     if(height > width) {
         return ((double) height / (double) width);
@@ -83,7 +87,7 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
     double last_value = 0;
     int last_center_x = 0;
     Marker *m = nullptr;
-    bool lacking_texture = false;
+    bool lacking_texture = true;
 
     for(int y=0; y<input.rows; y += this->row_step) {
         uchar *p = input.ptr(y);
@@ -93,12 +97,15 @@ std::vector<Target> TargetFinder::doTargetRecognition(cv::Mat input, cv::Mat out
         local_delta = 0.0;
 
         for(int x=0; x<input.cols; x++) {
-            local_value = (p[(3 * x)] + p[(3 * x) + 1] + p[(3 * x) + 2]) / 3.0;
-            delta = fabs(local_value - last_value);
-            global_delta = (alpha1 * delta) + ((1.0 - alpha1) * global_delta);
-            local_delta = (local_delta / alpha2) + delta;
-            last_value = local_value;
-            lacking_texture = local_delta <= MIN(1.0, global_delta);
+            if(this->filter_texture) {
+                local_value = (p[(3 * x)] + p[(3 * x) + 1] + p[(3 * x) + 2]) / 3.0;
+                delta = fabs(local_value - last_value);
+                global_delta =
+                        (alpha1 * delta) + ((1.0 - alpha1) * global_delta);
+                local_delta = (local_delta / alpha2) + delta;
+                last_value = local_value;
+                lacking_texture = local_delta <= MIN(1.0, global_delta);
+            }
 
             for(int b=0; b<this->num_bins; b++) {
                 unsigned int thresh_val = bin_vals[b];
