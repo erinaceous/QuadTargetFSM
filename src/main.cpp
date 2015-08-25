@@ -16,7 +16,6 @@
 #include "include/MarkerDetector.hpp"
 #include "FSMDetector.cpp"
 #include "CascadeDetector.cpp"
-#include "include/Marker.hpp"
 #include "include/Target.hpp"
 #include "include/PersistentTarget.hpp"
 #include "include/CameraModel.hpp"
@@ -158,6 +157,7 @@ int main(int argc, char* argv[]) {
     targetfinder::PersistentTarget *target = new targetfinder::PersistentTarget();
     targetfinder::CameraModel *cm = new targetfinder::CameraModel(input->cols, input->rows);
     targetfinder::Navigator *nv = new targetfinder::Navigator(input->cols, input->rows);
+
     if(pt.get<std::string>("parameters.method").compare("cascade") == 0) {
         detector = new targetfinder::CascadeDetector();
         #define cas ((targetfinder::CascadeDetector *)detector)
@@ -175,6 +175,7 @@ int main(int argc, char* argv[]) {
         fsm->setTolerance(pt.get<double>("parameters.fsm.tolerance"));
         fsm->setMarkerAspectTolerance(pt.get<double>("parameters.fsm.marker_aspect_tolerance"));
     }
+
     nv->setPIDs(
             pt.get<double>("navigator.pitch_p"),
             pt.get<double>("navigator.pitch_i"),
@@ -183,8 +184,7 @@ int main(int argc, char* argv[]) {
             pt.get<double>("navigator.roll_i"),
             pt.get<double>("navigator.roll_d")
     );
-    double target_influence = pt.get<double>("target.alpha");
-    int min_age = pt.get<int>("target.min_age");
+
     target->setTimeout(cv::getTickFrequency() * pt.get<double>("target.lifetime"));
     target->setAngleOffset(pt.get<double>("camera.angle_offset"));
     tf->setMarkerDistances(
@@ -192,9 +192,13 @@ int main(int argc, char* argv[]) {
             pt.get<double>("target.max_marker_distance")
     );
     tf->setMarkerSizeTolerance(pt.get<double>("target.marker_size_tolerance"));
+
+    double target_influence = pt.get<double>("target.alpha");
+    int min_age = pt.get<int>("target.min_age");
     bool convert_yuv = pt.get<bool>("camera.convert_yuv");
     bool flip_vertical = pt.get<bool>("camera.flip_vertical");
     bool flip_horizontal = pt.get<bool>("camera.flip_horizontal");
+    bool wait_for_input = pt.get<bool>("gui.wait_for_input");
 
     bool running = true;
     int64 start = cv::getTickCount();
@@ -202,7 +206,6 @@ int main(int argc, char* argv[]) {
     double fps = 1.0;
     static constexpr double alphafps = 0.05;
     cv::Point img_center(input->cols / 2, input->rows / 2);
-    bool wait_for_input = pt.get<bool>("gui.wait_for_input");
 
     /*
      * Main loop
@@ -262,7 +265,7 @@ int main(int argc, char* argv[]) {
         }
 
         /*
-         * Run the actual target finding state machine algorithm!
+         * Run the actual target finding algorithm!
          * This returns a list of potential targets -- regardless of
          * whether they're valid or not.
          * Valid ones are .calc_valid == true.
@@ -378,7 +381,11 @@ int main(int argc, char* argv[]) {
             nv->update(delta);
         }
 
-        // More FPS calculation stuff
+        /* More FPS calculation stuff
+         * FIXME: We're calculating FPS all over the place! So it's not going to
+         * be 100% accurate. The code after the marker detection part takes a
+         * negligible amount of time though.
+         */
         double hz = 1.0 / delta;
         fps += alphafps * (hz - fps);
 

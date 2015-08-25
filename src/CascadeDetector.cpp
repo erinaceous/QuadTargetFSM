@@ -48,6 +48,11 @@ namespace targetfinder {
 
             for(int i=0; i<objects.size(); i++) {
                 cv::Rect object = objects[i];
+
+                if(show_state && output.rows > 0) {
+                    cv::rectangle(output, object, cv::Scalar(0, 0, 0), 1);
+                }
+
                 Marker *m = new Marker(
                         object.x, object.x + object.width,
                         object.y, object.y + object.height,
