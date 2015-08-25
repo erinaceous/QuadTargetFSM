@@ -3,7 +3,7 @@
 //
 
 #include <dirent.h>
-#include "include/ImageCycler.hpp"
+#include "ImageCycler.hpp"
 
 ImageCycler::ImageCycler(std::string directory) {
     this->directory = directory;

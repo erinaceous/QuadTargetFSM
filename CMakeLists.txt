@@ -7,10 +7,11 @@ find_package(Doxygen)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_CURRENT_SOURCE_DIR src)
-include_directories(src/include)
 
-file(GLOB INCLUDE_FILES src/include/*.h*)
-file(GLOB SRC_FILES src/*.c*)
+include_directories(src/include)
+include_directories(src/utils)
+file(GLOB INCLUDE_FILES src/include/*.h* src/utils/*.h*)
+file(GLOB SRC_FILES src/utils/*.c* src/*.c*)
 
 if(DOXYGEN_FOUND)
 configure_file(Doxyfile.in

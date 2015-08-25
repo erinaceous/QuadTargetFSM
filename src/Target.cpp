@@ -5,7 +5,7 @@
 #include <memory>
 #include <math.h>
 #include <opencv2/opencv.hpp>
-#include "include/Utils.h"
+#include "utils/Utils.h"
 #include "include/Marker.hpp"
 #include "include/Target.hpp"
 
@@ -20,12 +20,7 @@ bool Target::addMarker(std::shared_ptr<Marker> m) {
 }
 
 bool Target::valid() {
-    if(this->marker_count != 3) {
-        return false;
-    }
-    cv::Rect rect = this->rect();
-    double aspect = _aspect(rect.width, rect.height);
-    return aspect > 0.25 && aspect <= 4.0;
+    return this->marker_count == 3;
 }
 
 cv::Rect Target::rect() {

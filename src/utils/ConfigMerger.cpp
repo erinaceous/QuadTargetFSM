@@ -4,7 +4,7 @@
 
 #include <queue>
 #include <boost/foreach.hpp>
-#include "include/ConfigMerger.hpp"
+#include "ConfigMerger.hpp"
 
 boost::property_tree::ptree ConfigMerger::mergePropertyTrees(
         const boost::property_tree::ptree &rptFirst,

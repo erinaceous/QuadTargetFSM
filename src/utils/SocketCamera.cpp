@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <fstream>
 #include <arpa/inet.h>
-#include "include/SocketCamera.hpp"
+#include "SocketCamera.hpp"
 
 SocketCamera::SocketCamera(std::string addr) {
     long port_ptr = addr.rfind(':');

@@ -13,14 +13,18 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include "include/MarkerDetector.hpp"
+#include "FSMDetector.cpp"
+#include "CascadeDetector.cpp"
+#include "include/Marker.hpp"
 #include "include/Target.hpp"
 #include "include/PersistentTarget.hpp"
 #include "include/CameraModel.hpp"
 #include "include/TargetFinder.hpp"
-#include "include/SocketCamera.hpp"
-#include "include/ImageCycler.hpp"
+#include "utils/SocketCamera.hpp"
+#include "utils/ImageCycler.hpp"
 #include "include/Navigator.hpp"
-#include "include/ConfigMerger.hpp"
+#include "utils/ConfigMerger.hpp"
 
 using namespace std;
 using namespace cv;
@@ -149,10 +153,28 @@ int main(int argc, char* argv[]) {
      * Create our target finder, target, camera model and navigator instances
      * and pass them a bunch of configuration stuff from the .ini file.
      */
+    targetfinder::MarkerDetector *detector;
     targetfinder::TargetFinder *tf = new targetfinder::TargetFinder();
     targetfinder::PersistentTarget *target = new targetfinder::PersistentTarget();
     targetfinder::CameraModel *cm = new targetfinder::CameraModel(input->cols, input->rows);
     targetfinder::Navigator *nv = new targetfinder::Navigator(input->cols, input->rows);
+    if(pt.get<std::string>("parameters.method").compare("cascade") == 0) {
+        detector = new targetfinder::CascadeDetector();
+        #define cas ((targetfinder::CascadeDetector *)detector)
+        cas->setClassifier(pt.get<std::string>("parameters.cascade.classifier_file"));
+        cas->setMinSize(pt.get<int>("parameters.cascade.min_size"));
+        cas->setMinNeighbors(pt.get<int>("parameters.cascade.min_neighbors"));
+        cas->setScaleFactor(pt.get<double>("parameters.cascade.scale_factor"));
+    } else {
+        detector = new targetfinder::FSMDetector();
+        #define fsm ((targetfinder::FSMDetector *) detector)
+        fsm->setRowStep(pt.get<int>("parameters.fsm.row_step"));
+        fsm->setMinThreshold(pt.get<int>("parameters.fsm.min_threshold"));
+        fsm->setMinLength(pt.get<int>("parameters.fsm.min_length"));
+        fsm->setSmoothness(pt.get<double>("parameters.fsm.threshold_smoothness"));
+        fsm->setTolerance(pt.get<double>("parameters.fsm.tolerance"));
+        fsm->setMarkerAspectTolerance(pt.get<double>("parameters.fsm.marker_aspect_tolerance"));
+    }
     nv->setPIDs(
             pt.get<double>("navigator.pitch_p"),
             pt.get<double>("navigator.pitch_i"),
@@ -161,25 +183,15 @@ int main(int argc, char* argv[]) {
             pt.get<double>("navigator.roll_i"),
             pt.get<double>("navigator.roll_d")
     );
-
-    double target_influence = pt.get<double>("parameters.target_alpha");
-    int min_age = pt.get<int>("parameters.min_age");
-    target->setTimeout(cv::getTickFrequency() * pt.get<double>("parameters.target_lifetime"));
+    double target_influence = pt.get<double>("target.alpha");
+    int min_age = pt.get<int>("target.min_age");
+    target->setTimeout(cv::getTickFrequency() * pt.get<double>("target.lifetime"));
     target->setAngleOffset(pt.get<double>("camera.angle_offset"));
-    tf->setRowStep(pt.get<int>("parameters.row_step"));
-    tf->setMinLength(pt.get<int>("parameters.min_length"));
-    tf->setTolerance(pt.get<double>("parameters.tolerance"));
-    tf->setNumBins(pt.get<int>("parameters.num_bins"));
-    tf->setMarkerAspectTolerance(pt.get<double>("parameters.marker_aspect_tolerance"));
     tf->setMarkerDistances(
-            pt.get<double>("parameters.min_marker_distance"),
-            pt.get<double>("parameters.max_marker_distance")
+            pt.get<double>("target.min_marker_distance"),
+            pt.get<double>("target.max_marker_distance")
     );
-    tf->setMarkerSizeTolerance(pt.get<double>("parameters.marker_size_tolerance"));
-    tf->setAngleOffset(pt.get<double>("camera.angle_offset"));
-    tf->setAlpha(pt.get<double>("parameters.alpha"));
-    tf->setVarianceThreshold(pt.get<double>("parameters.variance"));
-    tf->shouldFilterTexture(pt.get<bool>("parameters.filter_texture"));
+    tf->setMarkerSizeTolerance(pt.get<double>("target.marker_size_tolerance"));
     bool convert_yuv = pt.get<bool>("camera.convert_yuv");
     bool flip_vertical = pt.get<bool>("camera.flip_vertical");
     bool flip_horizontal = pt.get<bool>("camera.flip_horizontal");
@@ -257,8 +269,13 @@ int main(int argc, char* argv[]) {
          * (calc_valid is set when running the Target::valid() function, but
          * this is called inside the target recognition algorithm already)
          */
-        std::vector<targetfinder::Target> targets = tf->doTargetRecognition(
-                *input, output, render_fsm, render_markers, marker_info
+        std::vector<std::shared_ptr<targetfinder::Marker>> markers = detector->detect(
+                *input, output, render_fsm
+        );
+
+        std::vector<targetfinder::Target> targets = tf->groupTargets(
+                *input, output, markers,
+                render_markers, marker_info
         );
 
         /*
@@ -298,7 +315,7 @@ int main(int argc, char* argv[]) {
          * the x,y,width,height and angle of the new target.
          * target_influence adjusts how "big" the update is.
          */
-        if(best_target && best_similarity <= 1000.0) {
+        if(best_target) {
             target->update(best_target, current, target_influence);
         } else {
             target->tick();
