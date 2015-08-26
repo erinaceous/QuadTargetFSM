@@ -9,7 +9,7 @@ if [ "$1" = "" ]; then
 fi
 
 QTFSM_DIR="/home/owain/Dropbox/Aber/MSc_Dissertation/code/QuadTargetFSM"
-export QUADTARGET_CONFIG="$QTFSM_DIR/cfg/defaults.ini $QTFSM_DIR/cfg/config_images.ini"
+export QUADTARGET_CONFIGS="$QTFSM_DIR/cfg/defaults.ini $QTFSM_DIR/cfg/config_images.ini"
 mkdir -p $HOME/Projects/quadtargetfsm
 cd $HOME/Projects/quadtargetfsm
 cmake -DCMAKE_BUILD_TYPE=Release $QTFSM_DIR
