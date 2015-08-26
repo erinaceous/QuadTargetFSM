@@ -116,7 +116,7 @@ namespace targetfinder {
                                     continue;
                                 }
                                 last_center_x = center.x;
-                                int h2 = (int) ((aspect * (m->xlength())));
+                                int h2 = (int) ((aspect * (m->xlength() * 2.0)));
                                 int start_x = center.x - this->row_step;
                                 int end_x = center.x + this->row_step;
                                 int start_y = center.y - h2;

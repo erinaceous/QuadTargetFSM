@@ -32,6 +32,7 @@ static bool debug = false;
 #define DEBUGPRINT(x) { if(debug) { std::cerr << x << std::endl; }}
 
 int main(int argc, char* argv[]) {
+    // TODO: This is becoming a very long function. Split it up a bit.
     /*
      * Parse config files, load their contents into a bunch of local
      * variables.
@@ -66,6 +67,12 @@ int main(int argc, char* argv[]) {
     } else {
         save_video_file = pt.get<string>("gui.save_video");
     }
+    bool save_snapshots = false;
+    string save_snapshot_path = pt.get<string>("gui.save_snapshots");
+    if(save_snapshot_path.compare("none") != 0) {
+        save_snapshots = true;
+    }
+    unsigned long target_count = 0;
     double desired_fps = pt.get<double>("camera.fps");
     bool render_input = pt.get<bool>("render.input");
     bool render_fps = pt.get<bool>("render.fps");
@@ -101,9 +108,11 @@ int main(int argc, char* argv[]) {
     } else {
         cap = new VideoCapture(video_file);
     }
-    if(!cap->isOpened()) {
-        DEBUGPRINT("Couldn't open webcam or video");
-        // return -1;
+    if(!test_image) {
+        if (!cap->isOpened()) {
+            DEBUGPRINT("Couldn't open webcam or video");
+            // return -1;
+        }
     }
 
     /*
@@ -111,10 +120,12 @@ int main(int argc, char* argv[]) {
      * to the live webcam input and are ignored for the others, although
      * SocketCamera needs these to be correct.
      */
-    cap->set(CV_CAP_PROP_FRAME_WIDTH, pt.get<int>("camera.width"));
-    cap->set(CV_CAP_PROP_FRAME_HEIGHT, pt.get<int>("camera.height"));
-    cap->set(CV_CAP_PROP_FPS, desired_fps);
-    cap->set(CV_CAP_PROP_CONVERT_RGB, pt.get<bool>("camera.convert_rgb"));
+    if(!test_image) {
+        cap->set(CV_CAP_PROP_FRAME_WIDTH, pt.get<int>("camera.width"));
+        cap->set(CV_CAP_PROP_FRAME_HEIGHT, pt.get<int>("camera.height"));
+        cap->set(CV_CAP_PROP_FPS, desired_fps);
+        cap->set(CV_CAP_PROP_CONVERT_RGB, pt.get<bool>("camera.convert_rgb"));
+    }
 
     cv::Mat *input = new cv::Mat();
     if(test_image) {
@@ -149,8 +160,8 @@ int main(int argc, char* argv[]) {
     cv::Mat output(input->rows, input->cols, CV_8UC3);
 
     /*
-     * Create our target finder, target, camera model and navigator instances
-     * and pass them a bunch of configuration stuff from the .ini file.
+     * Create our marker detection, target finder, target, camera model and
+     * navigator instances...
      */
     targetfinder::MarkerDetector *detector;
     targetfinder::TargetFinder *tf = new targetfinder::TargetFinder();
@@ -158,6 +169,9 @@ int main(int argc, char* argv[]) {
     targetfinder::CameraModel *cm = new targetfinder::CameraModel(input->cols, input->rows);
     targetfinder::Navigator *nv = new targetfinder::Navigator(input->cols, input->rows);
 
+    /*
+     * ...and pass them a bunch of configuration stuff from the .ini files.
+     */
     if(pt.get<std::string>("parameters.method").compare("cascade") == 0) {
         detector = new targetfinder::CascadeDetector();
         #define cas ((targetfinder::CascadeDetector *)detector)
@@ -175,7 +189,6 @@ int main(int argc, char* argv[]) {
         fsm->setTolerance(pt.get<double>("parameters.fsm.tolerance"));
         fsm->setMarkerAspectTolerance(pt.get<double>("parameters.fsm.marker_aspect_tolerance"));
     }
-
     nv->setPIDs(
             pt.get<double>("navigator.pitch_p"),
             pt.get<double>("navigator.pitch_i"),
@@ -184,7 +197,6 @@ int main(int argc, char* argv[]) {
             pt.get<double>("navigator.roll_i"),
             pt.get<double>("navigator.roll_d")
     );
-
     target->setTimeout(cv::getTickFrequency() * pt.get<double>("target.lifetime"));
     target->setAngleOffset(pt.get<double>("camera.angle_offset"));
     tf->setMarkerDistances(
@@ -193,6 +205,9 @@ int main(int argc, char* argv[]) {
     );
     tf->setMarkerSizeTolerance(pt.get<double>("target.marker_size_tolerance"));
 
+    /*
+     * Some more miscellaneous config stuff loaded into local variables
+     */
     double target_influence = pt.get<double>("target.alpha");
     int min_age = pt.get<int>("target.min_age");
     bool convert_yuv = pt.get<bool>("camera.convert_yuv");
@@ -222,7 +237,7 @@ int main(int argc, char* argv[]) {
                 continue;
             }
         }
-        if(output_marker_info) {
+        if(output_marker_info && !test_image) {
             marker_info = ((ImageCycler*)cap)->getFile();
         }
 
@@ -265,17 +280,20 @@ int main(int argc, char* argv[]) {
         }
 
         /*
-         * Run the actual target finding algorithm!
+         * Run the algorithm for finding potential target markers in the input
+         * image.
+         */
+        std::vector<std::shared_ptr<targetfinder::Marker>> markers = detector->detect(
+                *input, output, render_fsm
+        );
+
+        /*
          * This returns a list of potential targets -- regardless of
          * whether they're valid or not.
          * Valid ones are .calc_valid == true.
          * (calc_valid is set when running the Target::valid() function, but
          * this is called inside the target recognition algorithm already)
          */
-        std::vector<std::shared_ptr<targetfinder::Marker>> markers = detector->detect(
-                *input, output, render_fsm
-        );
-
         std::vector<targetfinder::Target> targets = tf->groupTargets(
                 *input, output, markers,
                 render_markers, marker_info
@@ -444,6 +462,9 @@ int main(int argc, char* argv[]) {
         }
         if(save_video) {
             wri->write(output);
+        }
+        if(save_snapshots && target->alive(current) && target->age() <= 1) {
+            cv::imwrite(format(save_snapshot_path.c_str(), target_count++), output);
         }
         if(!headless) {
             cv::imshow("output", output);
