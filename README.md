@@ -1,5 +1,7 @@
 # QuadTargetFSM
 
+![What a landing target looks like](https://raw.githubusercontent.com/erinaceous/QuadTargetFSM/master/Target.png)
+
 Owain Jones <contact@odj.me>, MSc Dissertation project
 
 C++ and OpenCV implementation of quadcopter target tracking algorithm.
