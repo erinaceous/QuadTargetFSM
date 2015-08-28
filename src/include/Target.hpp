@@ -31,6 +31,7 @@ namespace targetfinder {
         bool isClose(std::shared_ptr<Marker> m);
         std::string str();
         std::shared_ptr<Marker> getCorner();
+        std::shared_ptr<Marker>* getMarkers();
 
         bool calc_valid;
     protected:

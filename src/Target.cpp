@@ -75,13 +75,13 @@ void Target::calcGeometry() {
     double a12 = Marker::angle(*this->markers[1], *this->markers[2]);
     double a20 = Marker::angle(*this->markers[2], *this->markers[0]);
     double a21 = Marker::angle(*this->markers[2], *this->markers[1]);
-    double a0 = abs(a01 - a02);
-    double a1 = abs(a10 - a12);
-    double a2 = abs(a20 - a21);
+    double a0 = fabs(a01 - a02);
+    double a1 = fabs(a10 - a12);
+    double a2 = fabs(a20 - a21);
 
-    if(a0 > M_PI) a0 = M_PI - a0;
-    if(a1 > M_PI) a1 = M_PI - a0;
-    if(a2 > M_PI) a2 = M_PI - a0;
+    while(a0 > M_PI_2) a0 -= M_PI_2;
+    while(a1 > M_PI_2) a1 -= M_PI_2;
+    while(a2 > M_PI_2) a2 -= M_PI_2;
 
     // cv::Point center_one, center_two;
 
@@ -110,6 +110,12 @@ void Target::calcGeometry() {
             (center_one.x + center_two.x) / 2,
             (center_one.y + center_two.y) / 2
     ); */
+    _debug("a0=" << _degrees(a0) <<
+           ", a1=" << _degrees(a1) <<
+           ", a2=" << _degrees(a2) <<
+           ", corner=" << _degrees(this->corner_angle)
+    );
+
     cv::Point new_center = this->center();
     cv::Point corner_center = this->corner->center();
     double dx = corner_center.x - new_center.x;
@@ -146,6 +152,10 @@ bool Target::isClose(std::shared_ptr<Marker> m) {
 
 std::shared_ptr<Marker> Target::getCorner() {
     return this->corner;
+}
+
+std::shared_ptr<Marker>* Target::getMarkers() {
+    return this->markers;
 }
 
 std::string Target::str() {

@@ -222,6 +222,11 @@ int main(int argc, char* argv[]) {
     static constexpr double alphafps = 0.05;
     cv::Point img_center(input->cols / 2, input->rows / 2);
 
+    cv::Scalar c_black = cv::Scalar(0, 0, 0);
+    cv::Scalar c_red = cv::Scalar(0, 0, 255);
+    cv::Scalar c_green = cv::Scalar(0, 255, 0);
+    cv::Scalar c_yellow(0, 255, 255);
+
     /*
      * Main loop
      */
@@ -325,6 +330,16 @@ int main(int argc, char* argv[]) {
          */
         if(render_target) {
             if(best_target) {
+                std::shared_ptr<targetfinder::Marker> *this_markers = best_target->getMarkers();
+                for(int i=0; i<3; i++) {
+                    cv::Point this_center = this_markers[i]->center();
+                    const char *markerStr = "%d";
+                    cv::putText(output, format(markerStr, i), this_center,
+                                cv::FONT_HERSHEY_SIMPLEX, 0.5, c_black, 4);
+                    cv::putText(output, format(markerStr, i), this_center,
+                                cv::FONT_HERSHEY_SIMPLEX, 0.5, c_yellow, 2);
+                }
+
                 std::shared_ptr<targetfinder::Marker> best_corner = best_target->getCorner();
                 cv::Rect corner_rect = best_corner->rect();
                 cv::rectangle(output, corner_rect, cv::Scalar(0, 255, 255), 2);
@@ -370,9 +385,6 @@ int main(int argc, char* argv[]) {
                 std::cout << ", \"distance(m)\": " << real_distance << "}";
             }
             if ((!headless || save_video) && render_target) {
-                cv::Scalar c_black = cv::Scalar(0, 0, 0);
-                cv::Scalar c_red = cv::Scalar(0, 0, 255);
-                cv::Scalar c_green = cv::Scalar(0, 255, 0);
                 cv::rectangle(output, r, c_black, 3);
                 cv::rectangle(output, r, c_red, 1);
                 cv::circle(output, center, 5, c_black, -1);
@@ -424,8 +436,6 @@ int main(int argc, char* argv[]) {
                 const char *tickStr = "fps = %0.0f";
                 std::string tickStrFormatted = format(tickStr, fps);
                 cv::Point fpsPos(10, 20);
-                cv::Scalar c_black(0, 0, 0);
-                cv::Scalar c_yellow(0, 255, 255);
                 cv::putText(output, tickStrFormatted, fpsPos,
                             cv::FONT_HERSHEY_SIMPLEX, 0.5, c_black,
                             3);
