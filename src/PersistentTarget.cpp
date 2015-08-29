@@ -29,7 +29,6 @@ double PersistentTarget::similarity(Target *other) {
             + pow((this->y - other_rect.y), 2)
             + pow((this->width - other_rect.width), 2)
             + pow((this->height - other_rect.height), 2)
-            + pow((this->angle() - other->angle()), 2)
     );
 }
 
