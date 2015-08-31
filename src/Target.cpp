@@ -69,52 +69,48 @@ double Target::angle() {
 }
 
 void Target::calcGeometry() {
-    double a01 = Marker::angle(*this->markers[0], *this->markers[1]);
-    double a02 = Marker::angle(*this->markers[0], *this->markers[2]);
-    double a10 = Marker::angle(*this->markers[1], *this->markers[0]);
-    double a12 = Marker::angle(*this->markers[1], *this->markers[2]);
-    double a20 = Marker::angle(*this->markers[2], *this->markers[0]);
-    double a21 = Marker::angle(*this->markers[2], *this->markers[1]);
+    /* FIXME: This seems to only work when calculated in degrees. Converting
+     * from radians just to do this is a bit of a waste of CPU cycles! I
+     * couldn't figure out what was wrong with it in radians-mode. a0,a1,a2
+     * can suddenly jump from roughly 45 degrees (in radians) to 135 degrees,
+     * AKA 180 minus 45. I think when dealing with radians you have to do
+     * bounds checking and wrapping of numbers a little differently.
+     */
+
+    double a01 = _degrees(Marker::angle(*this->markers[0], *this->markers[1]));
+    double a02 = _degrees(Marker::angle(*this->markers[0], *this->markers[2]));
+    double a10 = _degrees(Marker::angle(*this->markers[1], *this->markers[0]));
+    double a12 = _degrees(Marker::angle(*this->markers[1], *this->markers[2]));
+    double a20 = _degrees(Marker::angle(*this->markers[2], *this->markers[0]));
+    double a21 = _degrees(Marker::angle(*this->markers[2], *this->markers[1]));
     double a0 = fabs(a01 - a02);
     double a1 = fabs(a10 - a12);
     double a2 = fabs(a20 - a21);
 
-    while(a0 > M_PI_2) a0 -= M_PI_2;
-    while(a1 > M_PI_2) a1 -= M_PI_2;
-    while(a2 > M_PI_2) a2 -= M_PI_2;
-
-    // cv::Point center_one, center_two;
+    if(a0 > 180) a0 = 360 - a0;
+    if(a1 > 180) a1 = 360 - a1;
+    if(a2 > 180) a2 = 360 - a2;
 
     if(a0 >= a1 && a0 >= a2) {
         this->corner = markers[0];
         this->corner_angle = a0;
-        // center_one = markers[1]->center();
-        // center_two = markers[2]->center();
     }
 
     if(a1 >= a0 && a1 >= a2) {
         this->corner = markers[1];
         this->corner_angle = a1;
-        // center_one = markers[0]->center();
-        // center_two = markers[2]->center();
     }
 
     if(a2 >= a0 && a2 >= a1) {
         this->corner = markers[2];
         this->corner_angle = a2;
-        // center_one = markers[0]->center();
-        // center_two = markers[1]->center();
     }
 
-    /* cv::Point new_center = cv::Point(
-            (center_one.x + center_two.x) / 2,
-            (center_one.y + center_two.y) / 2
-    ); */
-    _debug("a0=" << _degrees(a0) <<
+    /*_debug("a0=" << _degrees(a0) <<
            ", a1=" << _degrees(a1) <<
            ", a2=" << _degrees(a2) <<
            ", corner=" << _degrees(this->corner_angle)
-    );
+    );*/
 
     cv::Point new_center = this->center();
     cv::Point corner_center = this->corner->center();

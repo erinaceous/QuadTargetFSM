@@ -59,11 +59,15 @@ int main(int argc, char* argv[]) {
     bool headless = pt.get<bool>("gui.headless");
     bool save_video = false;
     bool test_image = false;
+    bool endless_video = false;
     int wait_key = pt.get<int>("gui.waitKey");
     string video_file = pt.get<string>("camera.file");
     string save_video_file;
     if(argc == 2) {
         save_video_file = string(argv[1]);
+    } else if(argc == 3) {
+        save_video_file = string(argv[1]);
+        video_file = string(argv[2]);
     } else {
         save_video_file = pt.get<string>("gui.save_video");
     }
@@ -80,7 +84,8 @@ int main(int argc, char* argv[]) {
     bool render_target = pt.get<bool>("render.target");
     bool render_markers = pt.get<bool>("render.markers");
     bool render_fsm = pt.get<bool>("render.fsm_state");
-    bool output_demands = pt.get<bool>("output.demands");
+    bool output_target = pt.get<bool>("output.target");
+    bool output_navigator = pt.get<bool>("output.navigator");
     std::string *marker_info = nullptr;
     bool output_marker_info = pt.get<bool>("output.marker_info");
     int scale_w = pt.get<int>("gui.scale_w");
@@ -99,12 +104,16 @@ int main(int argc, char* argv[]) {
     VideoCapture *cap;
     if(std::isdigit(video_file[0])) {
         cap = new VideoCapture(pt.get<int>("camera.file"));
+        endless_video = true;
     } else if(video_file.rfind(".png") != std::string::npos) {
         test_image = true;
+        endless_video = true;
     } else if(video_file.rfind("/") == video_file.length() - 1) {
         cap = new ImageCycler(video_file);
+        endless_video = true;
     } else if(video_file.rfind(':') != std::string::npos) {
         cap = new SocketCamera(video_file);
+        endless_video = true;
     } else {
         cap = new VideoCapture(video_file);
     }
@@ -239,7 +248,11 @@ int main(int argc, char* argv[]) {
             if(!cap->read(*input)) {
                 DEBUGPRINT("couldn't get video frame");
                 cv::waitKey(1000);
-                continue;
+                if(endless_video) {
+                    continue;
+                } else {
+                    return 0;
+                }
             }
         }
         if(output_marker_info && !test_image) {
@@ -360,7 +373,7 @@ int main(int argc, char* argv[]) {
         // Calculate number of 'ticks' per second
         int64 ticks = cv::getTickCount() - current;
         double delta = ticks / cv::getTickFrequency();
-        if(output_demands) {
+        if(output_target) {
             std::cout << "{\"target\": ";
         }
 
@@ -380,7 +393,7 @@ int main(int argc, char* argv[]) {
             } else {
                 nv->update(center, angle, real_distance, target->age(), velocity);
             }
-            if(output_demands) {
+            if(output_target) {
                 std::cout << "{" << target->str();
                 std::cout << ", \"distance(m)\": " << real_distance << "}";
             }
@@ -405,7 +418,7 @@ int main(int argc, char* argv[]) {
             /*
              * If the target is dead, we ask the Navigator to return to center.
              */
-            if(output_demands) {
+            if(output_target) {
                 std::cout << "null";
             }
             nv->update(delta);
@@ -419,8 +432,9 @@ int main(int argc, char* argv[]) {
         double hz = 1.0 / delta;
         fps += alphafps * (hz - fps);
 
-        if(output_demands) {
+        if(output_target && output_navigator) {
             std::cout << ", \"sticks\": {" << nv->str() << "}";
+        } if(output_target) {
             std::cout << ", \"fps\": " << fps << ", \"time\": " << current <<
                          "}" << std::endl;
         }
