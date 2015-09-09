@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
         save_snapshots = true;
     }
     unsigned long target_count = 0;
-    float desired_fps = pt.get<float>("camera.fps");
+    double desired_fps = pt.get<double>("camera.fps");
     bool render_input = pt.get<bool>("render.input");
     bool render_fps = pt.get<bool>("render.fps");
     bool render_navigator = pt.get<bool>("render.navigator");
@@ -86,6 +86,7 @@ int main(int argc, char* argv[]) {
     bool render_fsm = pt.get<bool>("render.fsm_state");
     bool output_target = pt.get<bool>("output.target");
     bool output_navigator = pt.get<bool>("output.navigator");
+    bool output_times = pt.get<bool>("output.times");
     std::string *marker_info = nullptr;
     bool output_marker_info = pt.get<bool>("output.marker_info");
     int scale_w = pt.get<int>("gui.scale_w");
@@ -187,37 +188,37 @@ int main(int argc, char* argv[]) {
         cas->setClassifier(pt.get<std::string>("parameters.cascade.classifier_file"));
         cas->setMinSize(pt.get<int>("parameters.cascade.min_size"));
         cas->setMinNeighbors(pt.get<int>("parameters.cascade.min_neighbors"));
-        cas->setScaleFactor(pt.get<float>("parameters.cascade.scale_factor"));
+        cas->setScaleFactor(pt.get<double>("parameters.cascade.scale_factor"));
     } else {
         detector = new targetfinder::FSMDetector();
         #define fsm ((targetfinder::FSMDetector *) detector)
         fsm->setRowStep(pt.get<int>("parameters.fsm.row_step"));
         fsm->setMinThreshold(pt.get<int>("parameters.fsm.min_threshold"));
         fsm->setMinLength(pt.get<int>("parameters.fsm.min_length"));
-        fsm->setSmoothness(pt.get<float>("parameters.fsm.threshold_smoothness"));
-        fsm->setTolerance(pt.get<float>("parameters.fsm.tolerance"));
-        fsm->setMarkerAspectTolerance(pt.get<float>("parameters.fsm.marker_aspect_tolerance"));
+        fsm->setSmoothness(pt.get<double>("parameters.fsm.threshold_smoothness"));
+        fsm->setTolerance(pt.get<double>("parameters.fsm.tolerance"));
+        fsm->setMarkerAspectTolerance(pt.get<double>("parameters.fsm.marker_aspect_tolerance"));
     }
     nv->setPIDs(
-            pt.get<float>("navigator.pitch_p"),
-            pt.get<float>("navigator.pitch_i"),
-            pt.get<float>("navigator.pitch_d"),
-            pt.get<float>("navigator.roll_p"),
-            pt.get<float>("navigator.roll_i"),
-            pt.get<float>("navigator.roll_d")
+            pt.get<double>("navigator.pitch_p"),
+            pt.get<double>("navigator.pitch_i"),
+            pt.get<double>("navigator.pitch_d"),
+            pt.get<double>("navigator.roll_p"),
+            pt.get<double>("navigator.roll_i"),
+            pt.get<double>("navigator.roll_d")
     );
-    target->setTimeout(cv::getTickFrequency() * pt.get<float>("target.lifetime"));
-    target->setAngleOffset(pt.get<float>("camera.angle_offset"));
+    target->setTimeout(cv::getTickFrequency() * pt.get<double>("target.lifetime"));
+    target->setAngleOffset(pt.get<double>("camera.angle_offset"));
     tf->setMarkerDistances(
-            pt.get<float>("target.min_marker_distance"),
-            pt.get<float>("target.max_marker_distance")
+            pt.get<double>("target.min_marker_distance"),
+            pt.get<double>("target.max_marker_distance")
     );
-    tf->setMarkerSizeTolerance(pt.get<float>("target.marker_size_tolerance"));
+    tf->setMarkerSizeTolerance(pt.get<double>("target.marker_size_tolerance"));
 
     /*
      * Some more miscellaneous config stuff loaded into local variables
      */
-    float target_influence = pt.get<float>("target.alpha");
+    double target_influence = pt.get<double>("target.alpha");
     int min_age = pt.get<int>("target.min_age");
     bool convert_yuv = pt.get<bool>("camera.convert_yuv");
     bool flip_vertical = pt.get<bool>("camera.flip_vertical");
@@ -226,9 +227,10 @@ int main(int argc, char* argv[]) {
 
     bool running = true;
     int64 start = cv::getTickCount();
-    int64 current;
-    float fps = 1.0;
-    static constexpr float alphafps = 0.05;
+    int64 t_start, t_framegrab, t_preprocessing, t_detect, t_group, t_select,
+            t_render, t_output, t_end;
+    double fps = 1.0, delta = 0.0, hz = 1.0;
+    static constexpr double alphafps = 0.05;
     cv::Point img_center(input->cols / 2, input->rows / 2);
 
     cv::Scalar c_black = cv::Scalar(0, 0, 0);
@@ -243,7 +245,7 @@ int main(int argc, char* argv[]) {
         if(wait_for_input) {
             getchar();
         }
-        current = cv::getTickCount();
+        t_start = cv::getTickCount();
         if (!test_image) {
             if(!cap->read(*input)) {
                 DEBUGPRINT("couldn't get video frame");
@@ -255,6 +257,8 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
+        t_framegrab = cv::getTickCount();
+
         if(output_marker_info && !test_image) {
             marker_info = ((ImageCycler*)cap)->getFile();
         }
@@ -297,6 +301,8 @@ int main(int argc, char* argv[]) {
             cv::cvtColor(*input, *input, cv::COLOR_BGR2YUV);
         }
 
+        t_preprocessing = cv::getTickCount();
+
         /*
          * Run the algorithm for finding potential target markers in the input
          * image.
@@ -304,6 +310,7 @@ int main(int argc, char* argv[]) {
         std::vector<std::shared_ptr<targetfinder::Marker>> markers = detector->detect(
                 *input, output, render_fsm
         );
+        t_detect = cv::getTickCount();
 
         /*
          * This returns a list of potential targets -- regardless of
@@ -316,6 +323,7 @@ int main(int argc, char* argv[]) {
                 *input, output, markers,
                 render_markers, marker_info
         );
+        t_group = cv::getTickCount();
 
         /*
          * Now we (possibly) have a list of targets, we need to select the best
@@ -326,17 +334,18 @@ int main(int argc, char* argv[]) {
          * are considered.
          */
         targetfinder::Target *best_target = nullptr;
-        float best_similarity = -1.0;
+        double best_similarity = -1.0;
         for(int i=0; i<targets.size(); i++) {
             if(!targets[i].calc_valid) {
                 continue;
             }
-            float cur_similarity = target->similarity(&targets[i]);
+            double cur_similarity = target->similarity(&targets[i]);
             if(best_similarity == -1.0 || cur_similarity < best_similarity) {
                 best_similarity = cur_similarity;
                 best_target = &targets[i];
             }
         }
+        t_select = cv::getTickCount();
 
         /*
          * Show which marker is the corner of the target, for debug purposes
@@ -365,14 +374,11 @@ int main(int argc, char* argv[]) {
          * target_influence adjusts how "big" the update is.
          */
         if(best_target) {
-            target->update(best_target, current, target_influence);
+            target->update(best_target, t_start, target_influence);
         } else {
             target->tick();
         }
 
-        // Calculate number of 'ticks' per second
-        int64 ticks = cv::getTickCount() - current;
-        float delta = ticks / cv::getTickFrequency();
         if(output_target) {
             std::cout << "{\"target\": ";
         }
@@ -382,12 +388,12 @@ int main(int argc, char* argv[]) {
          * send its information to the Navigator instance, as well as output the
          * target info. in JSON format.
          */
-        if(target->alive(current) && target->age() >= min_age) {
+        if(target->alive(t_start) && target->age() >= min_age) {
             cv::Rect r = target->rect();
             cv::Point center = target->center();
-            float velocity = target->velocity();
-            float real_distance = cm->distance(r.width, r.height) * 0.001;
-            float angle = target->angle();
+            double velocity = target->velocity();
+            double real_distance = cm->distance(r.width, r.height) * 0.001;
+            double angle = target->angle();
             if(best_similarity != 0.0) {
                 nv->update(center, angle, real_distance, target->age(), velocity);
             } else {
@@ -424,18 +430,10 @@ int main(int argc, char* argv[]) {
             nv->update(delta);
         }
 
-        /* More FPS calculation stuff
-         * FIXME: We're calculating FPS all over the place! So it's not going to
-         * be 100% accurate. The code after the marker detection part takes a
-         * negligible amount of time though.
-         */
-        float hz = 1.0 / delta;
-        fps += alphafps * (hz - fps);
-
         if(output_target && output_navigator) {
             std::cout << ", \"sticks\": {" << nv->str() << "}";
         } if(output_target) {
-            std::cout << ", \"fps\": " << fps << ", \"time\": " << current <<
+            std::cout << ", \"fps\": " << fps << ", \"time\": " << t_start <<
                          "}" << std::endl;
         }
 
@@ -484,16 +482,40 @@ int main(int argc, char* argv[]) {
         if(!headless || save_video && (scale_w > 0 && scale_h > 0)) {
             cv::resize(output, output, cv::Size(scale_w, scale_h));
         }
+        t_render = cv::getTickCount();
+
         if(save_video) {
             wri->write(output);
         }
-        if(save_snapshots && target->alive(current) && target->age() <= 1) {
+        if(save_snapshots && target->alive(t_start) && target->age() <= 1) {
             cv::imwrite(format(save_snapshot_path.c_str(), target_count++), output);
         }
         if(!headless) {
             cv::imshow("output", output);
             cv::waitKey(wait_key);
         }
+        t_output = cv::getTickCount();
+
+        // Output times spent on each part of the loop.
+        if(output_times) {
+            double tickFreq = cv::getTickFrequency();
+            std::cout << "start=" << ((t_start - t_end) / tickFreq);
+            std::cout << ", framegrab=" << ((t_framegrab - t_start) / tickFreq);
+            std::cout << ", preprocess=" << ((t_preprocessing - t_framegrab) / tickFreq);
+            std::cout << ", detect=" << ((t_detect - t_preprocessing) / tickFreq);
+            std::cout << ", group=" << ((t_group - t_detect) / tickFreq);
+            std::cout << ", select=" << ((t_select - t_group) / tickFreq);
+            std::cout << ", render=" << ((t_render - t_select) / tickFreq);
+            std::cout << ", output=" << ((t_output - t_render) / tickFreq);
+            std::cout << std::endl;
+        }
+
+        // Calculate overall framerate.
+        t_end = cv::getTickCount();
+        delta = (t_end - t_start) / cv::getTickFrequency();
+        hz = 1.0 / delta;
+        fps += alphafps * (hz - fps);
+
     }
 
     return 0;
