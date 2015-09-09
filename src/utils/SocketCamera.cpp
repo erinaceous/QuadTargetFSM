@@ -31,7 +31,7 @@ bool SocketCamera::isOpened() {
     return true;
 }
 
-bool SocketCamera::set(int propId, double value) {
+bool SocketCamera::set(int propId, float value) {
     switch(propId) {
         case CV_CAP_PROP_FRAME_WIDTH:
             this->width = (int) value;

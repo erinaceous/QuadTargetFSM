@@ -21,13 +21,13 @@ namespace targetfinder {
                                              std::vector<std::shared_ptr<Marker>> markers,
                                              bool show_markers=false,
                                              std::string *marker_info=nullptr);
-            void setMarkerDistances(double min_distance, double max_distance);
-            void setMarkerSizeTolerance(double tolerance);
+            void setMarkerDistances(float min_distance, float max_distance);
+            void setMarkerSizeTolerance(float tolerance);
 
         protected:
-            double min_marker_distance = Target::MIN_MARKER_DISTANCE;
-            double max_marker_distance = Target::MAX_MARKER_DISTANCE;
-            double marker_size_tolerance = Target::MARKER_SIZE_TOLERANCE;
+            float min_marker_distance = Target::MIN_MARKER_DISTANCE;
+            float max_marker_distance = Target::MAX_MARKER_DISTANCE;
+            float marker_size_tolerance = Target::MARKER_SIZE_TOLERANCE;
     };
 
 }

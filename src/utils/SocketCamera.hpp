@@ -20,7 +20,7 @@ class SocketCamera : public cv::VideoCapture {
     public:
         SocketCamera(std::string addr);
         bool isOpened();
-        bool set(int propId, double value);
+        bool set(int propId, float value);
         bool read(cv::Mat &image);
     private:
         std::string hostname;

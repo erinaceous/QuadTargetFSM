@@ -15,16 +15,16 @@ namespace targetfinder {
         friend class Marker;
         friend class TargetFinder;
     public:
-        static constexpr double MIN_MARKER_DISTANCE = 0.5;
-        static constexpr double MAX_MARKER_DISTANCE = 5.0;
-        static constexpr double MARKER_SIZE_TOLERANCE = 0.7;
+        static constexpr float MIN_MARKER_DISTANCE = 0.5;
+        static constexpr float MAX_MARKER_DISTANCE = 5.0;
+        static constexpr float MARKER_SIZE_TOLERANCE = 0.7;
 
         // Target();
         // ~Target();
         bool valid();
         bool addMarker(std::shared_ptr<Marker> m);
-        double angle();
-        double length();
+        float angle();
+        float length();
         cv::Rect rect();
         cv::RotatedRect rotatedRect();
         cv::Point center();
@@ -37,14 +37,14 @@ namespace targetfinder {
     protected:
         std::shared_ptr<Marker> markers[3];
         int marker_count = 0;
-        double calc_angle, calc_length;
+        float calc_angle, calc_length;
         cv::Rect bounding_box;
         cv::Point center_point;
         bool updated = true;
         void calcGeometry();
         std::shared_ptr<Marker> corner;
-        double corner_angle, angle_offset;
-        double min_marker_distance, max_marker_distance, marker_size_tolerance;
+        float corner_angle, angle_offset;
+        float min_marker_distance, max_marker_distance, marker_size_tolerance;
     };
 
 }

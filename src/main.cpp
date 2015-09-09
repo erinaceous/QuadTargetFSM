@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
         save_snapshots = true;
     }
     unsigned long target_count = 0;
-    double desired_fps = pt.get<double>("camera.fps");
+    float desired_fps = pt.get<float>("camera.fps");
     bool render_input = pt.get<bool>("render.input");
     bool render_fps = pt.get<bool>("render.fps");
     bool render_navigator = pt.get<bool>("render.navigator");
@@ -187,37 +187,37 @@ int main(int argc, char* argv[]) {
         cas->setClassifier(pt.get<std::string>("parameters.cascade.classifier_file"));
         cas->setMinSize(pt.get<int>("parameters.cascade.min_size"));
         cas->setMinNeighbors(pt.get<int>("parameters.cascade.min_neighbors"));
-        cas->setScaleFactor(pt.get<double>("parameters.cascade.scale_factor"));
+        cas->setScaleFactor(pt.get<float>("parameters.cascade.scale_factor"));
     } else {
         detector = new targetfinder::FSMDetector();
         #define fsm ((targetfinder::FSMDetector *) detector)
         fsm->setRowStep(pt.get<int>("parameters.fsm.row_step"));
         fsm->setMinThreshold(pt.get<int>("parameters.fsm.min_threshold"));
         fsm->setMinLength(pt.get<int>("parameters.fsm.min_length"));
-        fsm->setSmoothness(pt.get<double>("parameters.fsm.threshold_smoothness"));
-        fsm->setTolerance(pt.get<double>("parameters.fsm.tolerance"));
-        fsm->setMarkerAspectTolerance(pt.get<double>("parameters.fsm.marker_aspect_tolerance"));
+        fsm->setSmoothness(pt.get<float>("parameters.fsm.threshold_smoothness"));
+        fsm->setTolerance(pt.get<float>("parameters.fsm.tolerance"));
+        fsm->setMarkerAspectTolerance(pt.get<float>("parameters.fsm.marker_aspect_tolerance"));
     }
     nv->setPIDs(
-            pt.get<double>("navigator.pitch_p"),
-            pt.get<double>("navigator.pitch_i"),
-            pt.get<double>("navigator.pitch_d"),
-            pt.get<double>("navigator.roll_p"),
-            pt.get<double>("navigator.roll_i"),
-            pt.get<double>("navigator.roll_d")
+            pt.get<float>("navigator.pitch_p"),
+            pt.get<float>("navigator.pitch_i"),
+            pt.get<float>("navigator.pitch_d"),
+            pt.get<float>("navigator.roll_p"),
+            pt.get<float>("navigator.roll_i"),
+            pt.get<float>("navigator.roll_d")
     );
-    target->setTimeout(cv::getTickFrequency() * pt.get<double>("target.lifetime"));
-    target->setAngleOffset(pt.get<double>("camera.angle_offset"));
+    target->setTimeout(cv::getTickFrequency() * pt.get<float>("target.lifetime"));
+    target->setAngleOffset(pt.get<float>("camera.angle_offset"));
     tf->setMarkerDistances(
-            pt.get<double>("target.min_marker_distance"),
-            pt.get<double>("target.max_marker_distance")
+            pt.get<float>("target.min_marker_distance"),
+            pt.get<float>("target.max_marker_distance")
     );
-    tf->setMarkerSizeTolerance(pt.get<double>("target.marker_size_tolerance"));
+    tf->setMarkerSizeTolerance(pt.get<float>("target.marker_size_tolerance"));
 
     /*
      * Some more miscellaneous config stuff loaded into local variables
      */
-    double target_influence = pt.get<double>("target.alpha");
+    float target_influence = pt.get<float>("target.alpha");
     int min_age = pt.get<int>("target.min_age");
     bool convert_yuv = pt.get<bool>("camera.convert_yuv");
     bool flip_vertical = pt.get<bool>("camera.flip_vertical");
@@ -227,8 +227,8 @@ int main(int argc, char* argv[]) {
     bool running = true;
     int64 start = cv::getTickCount();
     int64 current;
-    double fps = 1.0;
-    static constexpr double alphafps = 0.05;
+    float fps = 1.0;
+    static constexpr float alphafps = 0.05;
     cv::Point img_center(input->cols / 2, input->rows / 2);
 
     cv::Scalar c_black = cv::Scalar(0, 0, 0);
@@ -326,12 +326,12 @@ int main(int argc, char* argv[]) {
          * are considered.
          */
         targetfinder::Target *best_target = nullptr;
-        double best_similarity = -1.0;
+        float best_similarity = -1.0;
         for(int i=0; i<targets.size(); i++) {
             if(!targets[i].calc_valid) {
                 continue;
             }
-            double cur_similarity = target->similarity(&targets[i]);
+            float cur_similarity = target->similarity(&targets[i]);
             if(best_similarity == -1.0 || cur_similarity < best_similarity) {
                 best_similarity = cur_similarity;
                 best_target = &targets[i];
@@ -372,7 +372,7 @@ int main(int argc, char* argv[]) {
 
         // Calculate number of 'ticks' per second
         int64 ticks = cv::getTickCount() - current;
-        double delta = ticks / cv::getTickFrequency();
+        float delta = ticks / cv::getTickFrequency();
         if(output_target) {
             std::cout << "{\"target\": ";
         }
@@ -385,9 +385,9 @@ int main(int argc, char* argv[]) {
         if(target->alive(current) && target->age() >= min_age) {
             cv::Rect r = target->rect();
             cv::Point center = target->center();
-            double velocity = target->velocity();
-            double real_distance = cm->distance(r.width, r.height) * 0.001;
-            double angle = target->angle();
+            float velocity = target->velocity();
+            float real_distance = cm->distance(r.width, r.height) * 0.001;
+            float angle = target->angle();
             if(best_similarity != 0.0) {
                 nv->update(center, angle, real_distance, target->age(), velocity);
             } else {
@@ -429,7 +429,7 @@ int main(int argc, char* argv[]) {
          * be 100% accurate. The code after the marker detection part takes a
          * negligible amount of time though.
          */
-        double hz = 1.0 / delta;
+        float hz = 1.0 / delta;
         fps += alphafps * (hz - fps);
 
         if(output_target && output_navigator) {

@@ -14,7 +14,7 @@ void PersistentTarget::tick() {
     this->lifetime++;
 }
 
-double PersistentTarget::similarity(Target *other) {
+float PersistentTarget::similarity(Target *other) {
     /**
      * Calculate the n-dimensional euclidean distance between this
      * target and another.
@@ -32,7 +32,7 @@ double PersistentTarget::similarity(Target *other) {
     );
 }
 
-double PersistentTarget::distance(Target *other) {
+float PersistentTarget::distance(Target *other) {
     /**
      * Calculate just the x,y distance between this target's center point and
      * another.
@@ -45,13 +45,13 @@ double PersistentTarget::distance(Target *other) {
     );
 }
 
-double PersistentTarget::velocity() {
+float PersistentTarget::velocity() {
     return this->calc_velocity;
 }
 
-void PersistentTarget::update(Target *new_target, int64 timestamp, double influence) {
+void PersistentTarget::update(Target *new_target, int64 timestamp, float influence) {
     cv::Rect other_rect = new_target->rect();
-    double other_angle = new_target->angle();
+    float other_angle = new_target->angle();
     if(!this->alive(timestamp)) {
         this->x = other_rect.x;
         this->y = other_rect.y;
@@ -77,7 +77,7 @@ bool PersistentTarget::alive(int64 timestamp) {
     return this->calc_alive;
 }
 
-double PersistentTarget::angle() {
+float PersistentTarget::angle() {
     return this->calc_angle;
 }
 
@@ -98,7 +98,7 @@ void PersistentTarget::setTimeout(int64 ticks) {
     this->timeout_ticks = ticks;
 }
 
-void PersistentTarget::setAngleOffset(double angle) {
+void PersistentTarget::setAngleOffset(float angle) {
     this->angle_offset = angle;
 }
 
