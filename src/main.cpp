@@ -499,8 +499,7 @@ int main(int argc, char* argv[]) {
         // Output times spent on each part of the loop.
         if(output_times) {
             double tickFreq = cv::getTickFrequency();
-            std::cout << "start=" << ((t_start - t_end) / tickFreq);
-            std::cout << ", framegrab=" << ((t_framegrab - t_start) / tickFreq);
+            std::cout << "framegrab=" << ((t_framegrab - t_start) / tickFreq);
             std::cout << ", preprocess=" << ((t_preprocessing - t_framegrab) / tickFreq);
             std::cout << ", detect=" << ((t_detect - t_preprocessing) / tickFreq);
             std::cout << ", group=" << ((t_group - t_detect) / tickFreq);
