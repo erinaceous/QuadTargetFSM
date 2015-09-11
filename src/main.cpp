@@ -33,6 +33,8 @@ using namespace targetfinder;
 static bool debug = false;
 #define DEBUGPRINT(x) { if(debug) { cerr << x << endl; }}
 
+static constexpr double default_fps = 30;
+
 // Define some colours for debug output
 static const Scalar c_black = Scalar(0, 0, 0);
 static const Scalar c_white = Scalar(255, 255, 255);
@@ -126,33 +128,32 @@ void init(int argc, char* argv[]) {
 
     /*
      * Create our video input.
-     * If the video_file config item starts with a digit, we assume it's
-     * a V4L2 camera index (usually 0).
-     * If it's a string ending in .png, we assume it's a single test image,
-     * which we will load once.
-     * If it has a colon in it, we assume it's a URL e.g. localhost:5011,
-     * so we create a SocketCamera.
-     * Otherwise, it's treated as a video file.
      */
+    // Check for V4L2 camera index
     if(video_file.find("v4l2:") != string::npos) {
         string cam_idx = video_file.substr(video_file.find(':'),
                                            video_file.length());
         cap = new VideoCapture(atoi(cam_idx.c_str()));
         endless_video = true;
+    // Check for Pi Camera index
     } else if(video_file.find("pi:") != string::npos) {
         string cam_idx = video_file.substr(video_file.find(':'),
                                            video_file.length());
         cap = new PiCamera(atoi(cam_idx.c_str()));
         endless_video = true;
+    // Single static .png image
     } else if(video_file.rfind(".png") != string::npos) {
         test_image = true;
         endless_video = true;
+    // Directory containing sequence of images
     } else if(video_file.rfind("/") == video_file.length() - 1) {
         cap = new ImageCycler(video_file);
         endless_video = true;
+    // hostname:port pair, create a socket camera input
     } else if(video_file.rfind(':') != string::npos) {
         cap = new SocketCamera(video_file);
         endless_video = true;
+    // video input from file
     } else {
         cap = new VideoCapture(video_file);
     }
@@ -167,6 +168,9 @@ void init(int argc, char* argv[]) {
      * If possible, set properties for the video input. These really only apply
      * to the live webcam input and are ignored for the others, although
      * SocketCamera needs these to be correct.
+     * (There is no real protocol for SocketCamera, it sends an 'OK' and then
+     * reads width*height*3 bytes from the socket and assumes that's the
+     * whole image frame)
      */
     if(!test_image) {
         cap->set(CV_CAP_PROP_FRAME_WIDTH, pt.get<int>("camera.width"));
@@ -175,9 +179,9 @@ void init(int argc, char* argv[]) {
         cap->set(CV_CAP_PROP_CONVERT_RGB, pt.get<bool>("camera.convert_rgb"));
     }
 
-    input = new cv::Mat();
+    input = new Mat();
     if(test_image) {
-        Mat image = cv::imread(video_file);
+        Mat image = imread(video_file);
         image.copyTo(*input);
     } else {
         cap->read(*input);
@@ -191,13 +195,20 @@ void init(int argc, char* argv[]) {
      * very well on the Pi, in lieu of being able to easily use the hardware
      * h.264 encoder.
      */
+    int out_scale_w = scale_w, out_scale_h = scale_h;
+    if(out_scale_w <= 0 || out_scale_h <= 0) {
+        out_scale_w = input->cols;
+        out_scale_h = input->rows;
+    }
     wri = new VideoWriter();
     if(save_video_file.compare("none") != 0) {
         save_video = true;
         int fourcc = CV_FOURCC('M', 'J', 'P', 'G');
         wri->open(save_video_file, fourcc,
-                  (desired_fps <= 0) ? 30 : desired_fps,  // set output FPS to 30 if input is "fast as possible"
-                  cv::Size(scale_w, scale_h));
+                  // set output FPS to default if input FPS == 0
+                  (desired_fps <= 0) ? default_fps : desired_fps,
+                  Size(out_scale_w, out_scale_h)
+        );
     }
 
     output = Mat(input->rows, input->cols, CV_8UC3);
@@ -240,7 +251,7 @@ void init(int argc, char* argv[]) {
             pt.get<double>("navigator.roll_i"),
             pt.get<double>("navigator.roll_d")
     );
-    target->setTimeout(cv::getTickFrequency() * pt.get<double>("target.lifetime"));
+    target->setTimeout(getTickFrequency() * pt.get<double>("target.lifetime"));
     target->setAngleOffset(pt.get<double>("camera.angle_offset"));
     tf->setMarkerDistances(
             pt.get<double>("target.min_marker_distance"),
@@ -325,7 +336,7 @@ void tick() {
      * Run the algorithm for finding potential target markers in the input
      * image.
      */
-    vector<shared_ptr<targetfinder::Marker>> markers = detector->detect(
+    vector<shared_ptr<Marker>> markers = detector->detect(
             *input, output, (render_state && (save_video | !headless))
     );
     t_detect = getTickCount();
@@ -337,7 +348,7 @@ void tick() {
      * (calc_valid is set when running the Target::valid() function, but
      * this is called inside the target recognition algorithm already)
      */
-    vector<targetfinder::Target> targets = tf->groupTargets(
+    vector<Target> targets = tf->groupTargets(
             *input, output, markers,
             render_markers, marker_info
     );
@@ -351,7 +362,7 @@ void tick() {
      * distance is chosen as the best candidate target. Only valid targets
      * are considered.
      */
-    targetfinder::Target *best_target = nullptr;
+    Target *best_target = nullptr;
     double best_similarity = -1.0;
     for(int i=0; i<targets.size(); i++) {
         if(!targets[i].calc_valid) {
@@ -370,7 +381,7 @@ void tick() {
      */
     if(render_target) {
         if(best_target) {
-            shared_ptr<targetfinder::Marker> *this_markers = best_target->getMarkers();
+            shared_ptr<Marker> *this_markers = best_target->getMarkers();
             for(int i=0; i<3; i++) {
                 Point this_center = this_markers[i]->center();
                 const char *markerStr = "%d";
@@ -380,7 +391,7 @@ void tick() {
                             FONT_HERSHEY_SIMPLEX, 0.5, c_yellow, 2);
             }
 
-            shared_ptr<targetfinder::Marker> best_corner = best_target->getCorner();
+            shared_ptr<Marker> best_corner = best_target->getCorner();
             Rect corner_rect = best_corner->rect();
             rectangle(output, corner_rect, c_yellow, 2);
         }
