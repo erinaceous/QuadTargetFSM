@@ -14,7 +14,7 @@ class ImageCycler : public cv::VideoCapture {
         ImageCycler(std::string directory);
         void open(std::string directory);
         bool read(cv::Mat &image);
-        bool set(int propId, float value);
+        bool set(int propId, double value);
         bool isOpened();
         std::string* getFile();
     private:

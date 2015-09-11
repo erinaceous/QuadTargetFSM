@@ -57,7 +57,7 @@ bool ImageCycler::read(cv::Mat &image) {
     return true;
 }
 
-bool ImageCycler::set(int propId, float value) {
+bool ImageCycler::set(int propId, double value) {
     switch(propId) {
         case CV_CAP_PROP_FRAME_WIDTH:
             this->width = (int) value;
