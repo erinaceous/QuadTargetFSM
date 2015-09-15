@@ -8,7 +8,7 @@
 
 using namespace targetfinder;
 
-Navigator::PID::PID(float Kp, float Ki, float Kd) {
+Navigator::PID::PID(double Kp, double Ki, double Kd) {
     this->Kp = Kp;
     this->Ki = Ki;
     this->Kd = Kd;
@@ -16,24 +16,24 @@ Navigator::PID::PID(float Kp, float Ki, float Kd) {
     this->previous_error = 0.0;
 }
 
-void Navigator::PID::reset(float val) {
+void Navigator::PID::reset(double val) {
     this->integral = 0.0;
     this->previous_error = 0.0;
 }
 
-float Navigator::PID::step(float setpoint, float value, float deltatime) {
-    float error = setpoint - value;
+double Navigator::PID::step(double setpoint, double value, double deltatime) {
+    double error = setpoint - value;
     this->integral += error * deltatime;
-    float derivative = (error - this->previous_error) / deltatime;
-    float output = (this->Kp * error)
+    double derivative = (error - this->previous_error) / deltatime;
+    double output = (this->Kp * error)
                    + (this->Ki * this->integral)
                    + (this->Kd * derivative);
     this->previous_error = error;
     return output;
 }
 
-Navigator::Navigator(int width, int height, float rotation_deadzone, float horizontal_deadzone,
-                     float vertical_deadzone, float update_rate) {
+Navigator::Navigator(int width, int height, double rotation_deadzone, double horizontal_deadzone,
+                     double vertical_deadzone, double update_rate) {
     this->width = width;
     this->height = height;
     this->image_center = cv::Point(width / 2, height / 2);
@@ -48,10 +48,10 @@ Navigator::Navigator(int width, int height, float rotation_deadzone, float horiz
     this->throttle_pid = new PID();
 }
 
-bool Navigator::update(cv::Point target, float angle, float distance, int age, float deltatime) {
-    float scale = ((float) age * 0.1) * this->alpha;
-    float target_x = target.x / (float) this->width;
-    float target_y = target.y / (float) this->height;
+bool Navigator::update(cv::Point target, double angle, double distance, int age, double deltatime) {
+    double scale = ((double) age * 0.1) * this->alpha;
+    double target_x = target.x / (double) this->width;
+    double target_y = target.y / (double) this->height;
 
     /*if(target_x < (0.5 - this->horizontal_deadzone)
        || target_x > (0.5 + this->horizontal_deadzone)) {
@@ -80,7 +80,7 @@ bool Navigator::update(cv::Point target, float angle, float distance, int age, f
     this->angle = this->yaw_pid->step(M_PI_2, angle, deltatime) + M_PI_2;
 }
 
-void Navigator::update(float deltatime) {
+void Navigator::update(double deltatime) {
     // this->x = 0.5;
     // this->y = 0.5;
     this->angle = M_PI_2;
@@ -94,15 +94,15 @@ void Navigator::update(float deltatime) {
     this->pitch_pid->step(0.5, this->y, deltatime);
 }
 
-float Navigator::horizontal() {
+double Navigator::horizontal() {
     return this->x;
 }
 
-float Navigator::vertical() {
+double Navigator::vertical() {
     return this->y;
 }
 
-float Navigator::rotation() {
+double Navigator::rotation() {
     return this->angle;
 }
 
@@ -124,10 +124,10 @@ cv::Point Navigator::image_point(int axis, int length) {
     }
 }
 
-void Navigator::setPIDs(float pitch_P, float pitch_I, float pitch_D,
-                        float roll_P, float roll_I, float roll_D,
-                        float yaw_P, float yaw_I, float yaw_D,
-                        float throt_P, float throt_I, float throt_D) {
+void Navigator::setPIDs(double pitch_P, double pitch_I, double pitch_D,
+                        double roll_P, double roll_I, double roll_D,
+                        double yaw_P, double yaw_I, double yaw_D,
+                        double throt_P, double throt_I, double throt_D) {
     this->pitch_pid->Kp = pitch_P;
     this->pitch_pid->Ki = pitch_I;
     this->pitch_pid->Kd = pitch_D;

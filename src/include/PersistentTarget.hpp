@@ -13,27 +13,27 @@ namespace targetfinder {
         friend class Target;
         friend class TargetFinder;
     public:
-        void update(Target *new_target, int64 timestamp, float influence);
+        void update(Target *new_target, int64 timestamp, double influence);
         bool alive(int64 timestamp);
-        float similarity(Target *other);
-        float angle();
+        double similarity(Target *other);
+        double angle();
         cv::Rect rect();
         cv::Point center();
         void setTimeout(int64 ticks);
-        void setAngleOffset(float angle);
+        void setAngleOffset(double angle);
         std::string str();
         int age();
-        float distance(Target *other);
-        float velocity();
+        double distance(Target *other);
+        double velocity();
         void tick();
     protected:
         int64 timeout_ticks;
         int64 last_updated;
         int lifetime;
         int x, y, width, height;
-        float calc_angle, angle_offset;
+        double calc_angle, angle_offset;
         bool calc_alive = true;
-        float calc_velocity = 0.0;
+        double calc_velocity = 0.0;
     };
 
 }

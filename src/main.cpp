@@ -47,11 +47,11 @@ bool headless, save_video, test_image, endless_video, save_snapshots,
         render_input, render_state, render_markers, render_target,
         render_navigator, render_fps, output_target, output_navigator,
         output_times, output_marker_info, convert_yuv, flip_vertical,
-        flip_horizontal, wait_for_input, running;
+        flip_horizontal, wait_for_input, running, check_homogeneity;
 unsigned short target_count;
 int wait_key, scale_w, scale_h, min_age;
 double desired_fps, target_influence, alphafps = 0.05, fps, fps_delta, fps_hz;
-string video_file, save_video_file, save_snapshot_path;
+string video_file, save_video_file, save_snapshot_path, name_str_formatted;
 string *marker_info = nullptr;
 boost::property_tree::ptree pt;
 VideoCapture *cap;
@@ -242,7 +242,9 @@ void init(int argc, char* argv[]) {
         fsm->setSmoothness(pt.get<double>("parameters.fsm.threshold_smoothness"));
         fsm->setTolerance(pt.get<double>("parameters.fsm.tolerance"));
         fsm->setMarkerAspectTolerance(pt.get<double>("parameters.fsm.marker_aspect_tolerance"));
+        fsm->setHomogeneity(pt.get<bool>("parameters.fsm.check_homogeneity"));
     }
+    name_str_formatted = format("method = %s", detector->getName().c_str());
     nv->setPIDs(
             pt.get<double>("navigator.pitch_p"),
             pt.get<double>("navigator.pitch_i"),
@@ -474,15 +476,19 @@ void tick() {
      */
     if(!headless || save_video) {
         if(render_fps) {
-            const char *tickStr = "fps = %0.0f";
-            string tickStrFormatted = format(tickStr, fps);
+            string tickStrFormatted = format("fps = %0.0f", fps);
             Point fpsPos(10, 20);
+            Point namePos(10, 36);
             putText(output, tickStrFormatted, fpsPos,
                         FONT_HERSHEY_SIMPLEX, 0.5, c_black,
                         3);
             putText(output, tickStrFormatted, fpsPos,
                         FONT_HERSHEY_SIMPLEX, 0.5,
                         c_yellow);
+            putText(output, name_str_formatted, namePos,
+                        FONT_HERSHEY_SIMPLEX, 0.5, c_black, 3);
+            putText(output, name_str_formatted, namePos,
+                        FONT_HERSHEY_SIMPLEX, 0.5, c_yellow);
         }
         if(render_navigator) {
             int ll = 150;

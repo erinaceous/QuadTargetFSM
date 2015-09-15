@@ -9,12 +9,12 @@
 
 using namespace targetfinder;
 
-void TargetFinder::setMarkerDistances(float min_distance, float max_distance) {
+void TargetFinder::setMarkerDistances(double min_distance, double max_distance) {
     this->min_marker_distance = min_distance;
     this->max_marker_distance = max_distance;
 }
 
-void TargetFinder::setMarkerSizeTolerance(float tolerance) {
+void TargetFinder::setMarkerSizeTolerance(double tolerance) {
     this->marker_size_tolerance = tolerance;
 }
 

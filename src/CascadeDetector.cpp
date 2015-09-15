@@ -14,7 +14,11 @@ namespace targetfinder {
     public:
         static constexpr int MIN_SIZE = 2;
         static constexpr int MIN_NEIGHBORS = 2;
-        static constexpr float SCALE_FACTOR = 2.0;
+        static constexpr double SCALE_FACTOR = 2.0;
+
+        std::string getName() {
+            return "cascade";
+        }
 
         void setClassifier(std::string file) {
             this->classifier.load(file.c_str());
@@ -28,7 +32,7 @@ namespace targetfinder {
             this->min_neighbors = min_neighbors;
         }
 
-        void setScaleFactor(float scale_factor) {
+        void setScaleFactor(double scale_factor) {
             this->scale_factor = scale_factor;
         }
 
@@ -70,6 +74,6 @@ namespace targetfinder {
         cv::CascadeClassifier classifier;
         int min_size = MIN_SIZE;
         int min_neighbors = MIN_NEIGHBORS;
-        float scale_factor = SCALE_FACTOR;
+        double scale_factor = SCALE_FACTOR;
     };
 }

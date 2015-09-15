@@ -29,6 +29,7 @@ namespace targetfinder {
                     cv::Mat output,
                     bool show_state = false
             ) {};
+            virtual std::string getName() { return "null"; }
     };
 
 }

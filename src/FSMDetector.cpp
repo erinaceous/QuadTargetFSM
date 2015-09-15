@@ -12,10 +12,18 @@
 namespace targetfinder {
     class FSMDetector : public MarkerDetector {
         public:
-            static constexpr float MARKER_ASPECT_TOLERANCE = 0.9;
+            static constexpr double MARKER_ASPECT_TOLERANCE = 0.9;
             static constexpr int ROW_STEP = 1;
-            static constexpr float MIN_THRESHOLD = 25.0;
-            static constexpr float ALPHA = 0.00001;
+            static constexpr double MIN_THRESHOLD = 25.0;
+            static constexpr double ALPHA = 0.00001;
+
+            std::string getName() {
+               return "fsm";
+            }
+
+            void setHomogeneity(bool homogeneity) {
+                this->homogeneity = homogeneity;
+            }
 
             void setMinThreshold(int thresh) {
                 this->min_threshold = thresh;
@@ -29,15 +37,15 @@ namespace targetfinder {
                 this->min_length = length;
             }
 
-            void setSmoothness(float smoothness) {
+            void setSmoothness(double smoothness) {
                 this->alpha = smoothness;
             }
 
-            void setTolerance(float tolerance) {
+            void setTolerance(double tolerance) {
                 this->tolerance = tolerance;
             }
 
-            void setMarkerAspectTolerance(float tolerance) {
+            void setMarkerAspectTolerance(double tolerance) {
                 this->marker_aspect_tolerance = tolerance;
             }
 
@@ -58,22 +66,25 @@ namespace targetfinder {
                         this->tolerance,
                         this->min_length
                 );       // Vertically-scanning state machine
-
-                float aspect = _aspect(input.cols, input.rows);
-                float alpha1 = ((1.0 / ((float) input.cols / this->alpha)));
-                float global_delta = 0.0;
+                double aspect = _aspect(input.cols, input.rows);
+                double alpha1 = ((1.0 / ((double) input.cols / this->alpha)));
+                double global_delta = 0.0;
                 int last_center_x = 0;
-                Marker *m = nullptr;
-                float threshold = 0.0;
+                Marker *m = nullptr, *m2 = nullptr;
+                double threshold = 0.0;
                 unsigned char horiz_last = 0;
                 unsigned char horiz = 0;
                 int horiz_diff = 0;
+                unsigned int horiz_sum = 0;
+                unsigned char k = 8;
                 bool sm_value = false;
+                bool homogeneous = true;
 
                 for(int y=0; y<input.rows; y += this->row_step) {
                     uchar *p = input.ptr(y);
                     uchar *o = output.ptr(y);
 
+                    horiz_sum = 0;
                     sm.reset(y);
 
                     for(int x=0; x<input.cols; x++) {
@@ -86,11 +97,22 @@ namespace targetfinder {
                                 sm_value = true;
                             }
                         }
+                        if(this->homogeneity) {
+                            if (x % k == 0) {
+                                if ((horiz_sum / k) < threshold) {
+                                    homogeneous = true;
+                                } else {
+                                    homogeneous = false;
+                                }
+                                horiz_sum = 0;
+                            }
+                        }
+                        horiz_sum += abs(horiz_diff);
                         global_delta = (alpha1 * horiz_diff) + ((1.0 - alpha1) * global_delta);
                         threshold = (MAX(this->min_threshold, global_delta));
                         horiz_last = horiz;
 
-                        m = sm.step(x, y, sm_value);
+                        m = sm.step(x, y, sm_value, homogeneous);
 
                         if (show_state && output.rows > 0 && sm.state > 0) {
                             cv::Vec3b color = sm.state_colour();
@@ -145,8 +167,7 @@ namespace targetfinder {
                                 if(end_x >= input.cols) {
                                     end_x = input.cols - 1;
                                 }
-                                Marker *m2;
-                                p = input.ptr(start_y);
+                                m2 = nullptr;
                                 for(int x2 = start_x; x2 <= end_x; x2 += this->row_step) {
                                     unsigned char vert = 0;
                                     unsigned char vert_last = 0;
@@ -190,9 +211,9 @@ namespace targetfinder {
                                 }
                                 if (m2) {
                                     int min_pixels = (int) ((this->min_length * StateMachine::NUM_STATES) * this->tolerance);
-                                    float marker_aspect = _aspect(m->xlength(), m->ylength());
-                                    float min_marker_aspect = 1.0 - this->marker_aspect_tolerance;
-                                    float max_marker_aspect = 1.0 + this->marker_aspect_tolerance;
+                                    double marker_aspect = _aspect(m->xlength(), m->ylength());
+                                    double min_marker_aspect = 1.0 - this->marker_aspect_tolerance;
+                                    double max_marker_aspect = 1.0 + this->marker_aspect_tolerance;
                                     if (m->ylength() >= min_pixels
                                         && m->xlength() >= min_pixels
                                         && marker_aspect >= min_marker_aspect
@@ -216,9 +237,10 @@ namespace targetfinder {
             int row_step = ROW_STEP;
             int min_threshold = MIN_THRESHOLD;
             int min_length = StateMachine::MIN_LENGTH;
-            float marker_aspect_tolerance = MARKER_ASPECT_TOLERANCE;
-            float alpha = ALPHA;
-            float tolerance = StateMachine::TOLERANCE;
+            double marker_aspect_tolerance = MARKER_ASPECT_TOLERANCE;
+            double alpha = ALPHA;
+            double tolerance = StateMachine::TOLERANCE;
             std::vector<std::shared_ptr<Marker>> markers;
+            bool homogeneity = false;
     };
 }

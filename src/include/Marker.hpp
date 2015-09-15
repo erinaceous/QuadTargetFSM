@@ -24,10 +24,10 @@ namespace targetfinder {
         int ylength();
         bool contains(Marker other);
         bool contains(cv::Point other);
-        bool contains(float x, float y);
-        float distance(Marker other);
-        static float distance(Marker one, Marker two);
-        static float angle(Marker one, Marker two);
+        bool contains(double x, double y);
+        double distance(Marker other);
+        static double distance(Marker one, Marker two);
+        static double angle(Marker one, Marker two);
         cv::Rect rect();
         std::shared_ptr<Marker> cloned_shared_ptr();
         std::string str();
