@@ -42,4 +42,5 @@ picam/*.c*
 picam/*.h*
 picam/*.glsl
 picam/picam.zip
+picam/CMakeLists.txt
 picam*.zip
