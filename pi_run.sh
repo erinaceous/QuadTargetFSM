@@ -10,7 +10,7 @@ FLIP_VERT=1
 v4l2-ctl -p $FPS
 v4l2-ctl --set-fmt-video=width=$WIDTH,height=$HEIGHT,pixelformat=2
 v4l2-ctl --set-ctrl=horizontal_flip=$FLIP_HORIZ,vertical_flip=$FLIP_VERT
-export QTFSMCFG = "/root/quadtargetfsm/cfg"
+QTFSMCFG="/root/quadtargetfsm/cfg"
 export QUADTARGET_CONFIGS="$QTFSMCFG/defaults.ini $QTFSMCFG/pi/defaults.ini"
 cd /root/quadtargetfsm/build
 ./QuadTarget
