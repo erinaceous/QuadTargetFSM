@@ -49,13 +49,6 @@ cv::Rect Target::rect() {
     );
 }
 
-cv::RotatedRect Target::rotatedRect() {
-    cv::Rect rect = this->rect();
-    return cv::RotatedRect(
-            this->center(), cv::Size2f(rect.width, rect.height), (this->calc_angle * 180 / M_PI)
-    );
-}
-
 cv::Point Target::center() {
     cv::Rect rect = this->rect();
     return cv::Point(
@@ -93,17 +86,14 @@ void Target::calcGeometry() {
 
     if(a0 >= a1 && a0 >= a2) {
         this->corner = markers[0];
-        this->corner_angle = a0;
     }
 
     if(a1 >= a0 && a1 >= a2) {
         this->corner = markers[1];
-        this->corner_angle = a1;
     }
 
     if(a2 >= a0 && a2 >= a1) {
         this->corner = markers[2];
-        this->corner_angle = a2;
     }
 
     /*_debug("a0=" << _degrees(a0) <<
@@ -124,7 +114,7 @@ bool Target::isClose(std::shared_ptr<Marker> m) {
     if(this->marker_count > 2) {
         return false;
     }
-    double avg_size, avg_width;
+    double avg_size = 0.0, avg_width = 0.0;
     for(int i=0; i<this->marker_count; i++) {
         avg_size += this->markers[i]->rect().area();
         avg_width += this->markers[i]->xlength();

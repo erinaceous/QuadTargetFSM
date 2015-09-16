@@ -44,7 +44,7 @@ static const Scalar c_yellow(0, 255, 255);
 
 // Define all our config variables and pointers to objects initialized later
 bool headless, save_video, test_image, endless_video, save_snapshots,
-        render_input, render_state, render_markers, render_target,
+        render_input, render_detector, render_markers, render_target,
         render_navigator, render_fps, output_target, output_navigator,
         output_times, output_marker_info, convert_yuv, flip_vertical,
         flip_horizontal, wait_for_input, running, check_homogeneity;
@@ -117,7 +117,7 @@ void init(int argc, char* argv[]) {
     render_navigator = pt.get<bool>("render.navigator");
     render_target = pt.get<bool>("render.target");
     render_markers = pt.get<bool>("render.markers");
-    render_state = pt.get<bool>("render.fsm_state");
+    render_detector = pt.get<bool>("render.detector");
     output_target = pt.get<bool>("output.target");
     output_navigator = pt.get<bool>("output.navigator");
     output_times = pt.get<bool>("output.times");
@@ -339,7 +339,7 @@ void tick() {
      * image.
      */
     vector<shared_ptr<Marker>> markers = detector->detect(
-            *input, output, (render_state && (save_video | !headless))
+            *input, output, (render_detector && (save_video | !headless))
     );
     t_detect = getTickCount();
 
@@ -367,7 +367,7 @@ void tick() {
     Target *best_target = nullptr;
     double best_similarity = -1.0;
     for(int i=0; i<targets.size(); i++) {
-        if(!targets[i].calc_valid) {
+        if(!targets[i].valid()) {
             continue;
         }
         double cur_similarity = target->similarity(&targets[i]);
@@ -375,6 +375,9 @@ void tick() {
             best_similarity = cur_similarity;
             best_target = &targets[i];
         }
+    }
+    if(best_target) {
+        best_target->calcGeometry();
     }
     t_select = getTickCount();
 

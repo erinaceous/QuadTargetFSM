@@ -26,25 +26,19 @@ namespace targetfinder {
         double angle();
         double length();
         cv::Rect rect();
-        cv::RotatedRect rotatedRect();
         cv::Point center();
         bool isClose(std::shared_ptr<Marker> m);
         std::string str();
         std::shared_ptr<Marker> getCorner();
         std::shared_ptr<Marker>* getMarkers();
-
-        bool calc_valid;
+        void calcGeometry();
     protected:
         std::shared_ptr<Marker> markers[3];
         int marker_count = 0;
         double calc_angle, calc_length;
-        cv::Rect bounding_box;
-        cv::Point center_point;
-        bool updated = true;
-        void calcGeometry();
         std::shared_ptr<Marker> corner;
-        double corner_angle, angle_offset;
-        double min_marker_distance, max_marker_distance, marker_size_tolerance;
+        double angle_offset, min_marker_distance, max_marker_distance,
+                marker_size_tolerance;
     };
 
 }

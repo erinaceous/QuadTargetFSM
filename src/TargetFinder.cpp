@@ -50,12 +50,12 @@ std::vector<Target> TargetFinder::groupTargets(cv::Mat input, cv::Mat output,
             targets.push_back(target);
         }
     }
-    for(int t=0; t<targets.size(); t++) {
+    /*for(int t=0; t<targets.size(); t++) {
         targets[t].calc_valid = targets[t].valid();
         if(targets[t].calc_valid) {
             targets[t].calcGeometry();
         }
-    }
+    }*/
 
     return targets;
 }
