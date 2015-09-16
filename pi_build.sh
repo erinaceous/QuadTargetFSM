@@ -14,6 +14,7 @@ git pull
 if [ ! -f picam/picam.zip ]; then
     wget -O picam/picam.zip http://www.cheerfulprogrammer.com/downloads/picamtutorial/picamdemo.zip
     unzip picam/picam.zip -d picam/
+    rm picam/picam.cpp
 fi
 mkdir -p build
 cd build
