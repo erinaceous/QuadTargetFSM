@@ -41,3 +41,5 @@ build/
 picam/*.c*
 picam/*.h*
 picam/*.glsl
+picam/picam.zip
+picam*.zip
