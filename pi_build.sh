@@ -10,7 +10,7 @@ PI_BUILD=OFF
 cd /root/quadtargetfsm
 git pull
 if [ ! -f picam/picam.zip ]; then
-    wget -o picam/picam.zip http://www.cheerfulprogrammer.com/downloads/picamtutorial/picamdemo.zip
+    wget -O picam/picam.zip http://www.cheerfulprogrammer.com/downloads/picamtutorial/picamdemo.zip
     unzip picam/picam.zip -d picam/
 fi
 mkdir -p build
