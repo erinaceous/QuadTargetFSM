@@ -5,7 +5,9 @@
 
 # Not ready for the pi camera etc libraries yet! Set this to ON when you have
 # rasbperry pi userland in /opt/vc etc
-PI_BUILD=OFF
+if [ "$PI_BUILD" != "ON" ]; then
+    PI_BUILD=OFF
+fi
 
 cd /root/quadtargetfsm
 git pull
