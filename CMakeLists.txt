@@ -30,7 +30,7 @@ endif(DOXYGEN_FOUND)
 set(EXTRA_LIBS "")
 set(EXTRA_FILES "")
 option(PI_BUILD "PI_BUILD" OFF)
-if(PI_BUILD)goi
+if(PI_BUILD)
     include_directories(picam)
     file(GLOB EXTRA_FILES picam/*.c* picam/*.h*)
     include_directories(/opt/vc/include)
