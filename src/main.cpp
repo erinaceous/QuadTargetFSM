@@ -7,6 +7,12 @@
  * Original Author: Owain Jones [odj@aber.ac.uk]
  */
 
+#ifdef PI_BUILD
+    #define pi_build true
+#else
+    #define pi_build false
+#endif
+
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <boost/foreach.hpp>
@@ -47,7 +53,7 @@ bool headless, save_video, test_image, endless_video, save_snapshots,
         render_input, render_detector, render_markers, render_target,
         render_navigator, render_fps, output_target, output_navigator,
         output_times, output_marker_info, convert_yuv, flip_vertical,
-        flip_horizontal, wait_for_input, running, check_homogeneity;
+        flip_horizontal, wait_for_input, running, async_mode;
 unsigned short target_count;
 int wait_key, scale_w, scale_h, min_age;
 double desired_fps, target_influence, alphafps = 0.05, fps, fps_delta, fps_hz;
@@ -141,6 +147,7 @@ void init(int argc, char* argv[]) {
                                            video_file.length());
         cap = new PiCamera(atoi(cam_idx.c_str()));
         endless_video = true;
+        async_mode = true;
     // Single static .png image
     } else if(video_file.rfind(".png") != string::npos) {
         test_image = true;
@@ -563,11 +570,19 @@ int main(int argc, char* argv[]) {
     init(argc, argv);
     running = true;
 
-    /*
-     * Main loop
-     */
-    while(running) {
-        tick();
+    if(pi_build && async_mode) {
+        /*
+         * Set PiCam to use our tick() function as the callback function.
+         */
+        DEBUGPRINT("Pi Camera MMAL stuff not implemented yet. Exiting");
+        return 1;
+    } else {
+        /*
+        * Main loop
+        */
+        while (running) {
+            tick();
+        }
     }
 
     return 0;

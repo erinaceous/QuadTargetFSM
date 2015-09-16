@@ -36,3 +36,8 @@ build/
 # Python stuff
 *.pyo
 *.pyc
+
+# Stuff I don't have license for!
+picam/*.c*
+picam/*.h*
+picam/*.glsl
