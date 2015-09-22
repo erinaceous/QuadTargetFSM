@@ -229,7 +229,13 @@ void init(int argc, char* argv[]) {
      */
     tf = new TargetFinder();
     target = new PersistentTarget();
-    cm = new CameraModel(input->cols, input->rows);
+    cm = new CameraModel(
+        pt.get<double>("target.width"),
+        pt.get<double>("target.height"),
+        pt.get<double>("camera.focal_length"),
+        pt.get<double>("camera.magnification_factor"),
+        pt.get<double>("camera.sensor_width")
+    );
     nv = new Navigator(input->cols, input->rows);
 
     /*
@@ -440,7 +446,9 @@ void tick() {
         Rect r = target->rect();
         Point center = target->center();
         double velocity = target->velocity();
-        double real_distance = cm->distance(r.width, r.height) * 0.001;
+        double real_distance = cm->distance(
+            input->cols, input->rows,
+            r.width, r.height) * 0.001;
         double angle = target->angle();
         if(best_similarity != 0.0) {
             nv->update(center, angle, real_distance, target->age(), velocity);
