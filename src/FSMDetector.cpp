@@ -21,6 +21,19 @@ namespace targetfinder {
                return "fsm";
             }
 
+            std::string strStateCounts() {
+                std::stringstream ss;
+                for(unsigned char i=0; i < 7; i++) {
+                    ss << this->state_counts[i] << ", ";
+                }
+                ss << this->state_counts[7];
+                return ss.str();
+            }
+
+            void setOtsu(bool otsu) {
+                this->otsu = otsu;
+            }
+
             void setHomogeneity(bool homogeneity) {
                 this->homogeneity = homogeneity;
             }
@@ -54,8 +67,11 @@ namespace targetfinder {
                     cv::Mat output,
                     bool show_state
             ) {
-                markers.clear();
-
+                std::vector<std::shared_ptr<Marker>> markers;
+                // markers.clear();
+                for(unsigned int i=0; i<7; i++) {
+                    this->state_counts[i] = 0;
+                }
                 StateMachine sm(
                         input.cols,
                         this->tolerance,
@@ -79,6 +95,14 @@ namespace targetfinder {
                 unsigned char k = 8;
                 bool sm_value = false;
                 bool homogeneous = true;
+                unsigned int total_pixels = 0;
+
+                if(this->otsu) {
+                    std::vector<cv::Mat> yuv;
+                    cv::split(input, yuv);
+                    cv::threshold(yuv[0], yuv[0], 255, 255, cv::THRESH_OTSU);
+                    cv::merge(yuv, input);
+                }
 
                 for(int y=0; y<input.rows; y += this->row_step) {
                     uchar *p = input.ptr(y);
@@ -88,6 +112,7 @@ namespace targetfinder {
                     sm.reset(y);
 
                     for(int x=0; x<input.cols; x++) {
+                        total_pixels++;
                         horiz = p[(3 * x)];
                         horiz_diff = horiz - horiz_last;
                         if((horiz_diff > threshold) || (horiz_diff < -threshold)) {
@@ -113,6 +138,7 @@ namespace targetfinder {
                         horiz_last = horiz;
 
                         m = sm.step(x, y, sm_value, homogeneous);
+                        this->state_counts[sm.state]++;
 
                         if (show_state && output.rows > 0 && sm.state > 0) {
                             cv::Vec3b color = sm.state_colour();
@@ -230,6 +256,7 @@ namespace targetfinder {
                     }
                 }
 
+                this->state_counts[7] = total_pixels;
                 return markers;
             }
 
@@ -240,7 +267,7 @@ namespace targetfinder {
             double marker_aspect_tolerance = MARKER_ASPECT_TOLERANCE;
             double alpha = ALPHA;
             double tolerance = StateMachine::TOLERANCE;
-            std::vector<std::shared_ptr<Marker>> markers;
-            bool homogeneity = false;
+            bool homogeneity = false, otsu = false;
+            unsigned int state_counts[8];
     };
 }

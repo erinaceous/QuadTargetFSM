@@ -52,8 +52,9 @@ static const Scalar c_yellow(0, 255, 255);
 bool headless, save_video, test_image, endless_video, save_snapshots,
         render_input, render_detector, render_markers, render_target,
         render_navigator, render_fps, output_target, output_navigator,
-        output_times, output_marker_info, convert_yuv, flip_vertical,
-        flip_horizontal, wait_for_input, running, async_mode;
+        output_times, output_marker_info, output_fsm_states,
+        convert_yuv, flip_vertical, flip_horizontal, wait_for_input, running,
+        async_mode;
 unsigned short target_count;
 int wait_key, scale_w, scale_h, min_age;
 double desired_fps, target_influence, alphafps = 0.05, fps, fps_delta, fps_hz;
@@ -129,6 +130,7 @@ void init(int argc, char* argv[]) {
     output_times = pt.get<bool>("output.times");
     marker_info = nullptr;
     output_marker_info = pt.get<bool>("output.marker_info");
+    output_fsm_states = pt.get<bool>("output.fsm_states");
     scale_w = pt.get<int>("gui.scale_w");
     scale_h = pt.get<int>("gui.scale_h");
 
@@ -250,8 +252,10 @@ void init(int argc, char* argv[]) {
         fsm->setTolerance(pt.get<double>("parameters.fsm.tolerance"));
         fsm->setMarkerAspectTolerance(pt.get<double>("parameters.fsm.marker_aspect_tolerance"));
         fsm->setHomogeneity(pt.get<bool>("parameters.fsm.check_homogeneity"));
+        fsm->setOtsu(pt.get<bool>("parameters.fsm.thresh_otsu"));
     }
     name_str_formatted = format("method = %s", detector->getName().c_str());
+    output_fsm_states = output_fsm_states && (0 == detector->getName().compare("fsm"));
     nv->setPIDs(
             pt.get<double>("navigator.pitch_p"),
             pt.get<double>("navigator.pitch_i"),
@@ -348,6 +352,9 @@ void tick() {
     vector<shared_ptr<Marker>> markers = detector->detect(
             *input, output, (render_detector && (save_video | !headless))
     );
+    if(output_fsm_states) {
+        std::cout << ((FSMDetector *)detector)->strStateCounts() << std::endl;
+    }
     t_detect = getTickCount();
 
     /*

@@ -23,10 +23,11 @@ namespace targetfinder {
                     double magnification_factor=MAGNIFICATION_FACTOR, double sensor_width=SENSOR_WIDTH,
                     double sensor_height=SENSOR_HEIGHT);
     protected:
-        int image_width, image_height;
+        int image_width, image_height, image_size;
         double target_width = TARGET_WIDTH, target_height = TARGET_HEIGHT;
         double focal_length = FOCAL_LENGTH, magnification_factor = MAGNIFICATION_FACTOR;
         double sensor_width = SENSOR_WIDTH, sensor_height = SENSOR_HEIGHT;
+        double sensor_size, real_focal_length, target_size;
     };
 
 }

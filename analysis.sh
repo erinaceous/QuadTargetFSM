@@ -15,6 +15,16 @@ if [ "$2" = "" ]; then
     exit 1
 fi
 
+CUSTOM_VIDEO=""
+if [ "$3" != "" ]; then
+    CUSTOM_VIDEO=$3
+fi
+
+EXTRA_CONFIG=""
+if [ "$4" != "" ]; then
+    EXTRA_CONFIG=$4
+fi
+
 QTFSM_DIR="/home/owain/Dropbox/Aber/MSc_Dissertation/code/QuadTargetFSM"
 export QUADTARGET_CONFIGS="$QTFSM_DIR/cfg/defaults.ini"
 case "$2" in
@@ -47,5 +57,5 @@ else
     cmake -DCMAKE_BUILD_TYPE=Release $QTFSM_DIR
     ccache make -j
 fi
-export QUADTARGET_CONFIGS="$QUADTARGET_CONFIGS $CONFIGS"
-./QuadTarget | sed -E $SED | uniq | tee $1
+export QUADTARGET_CONFIGS="$QUADTARGET_CONFIGS $CONFIGS $EXTRA_CONFIG"
+nice -n -10 ./QuadTarget none $CUSTOM_VIDEO | sed -E $SED | uniq > $1
